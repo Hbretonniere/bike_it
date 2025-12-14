@@ -12,6 +12,22 @@ import numpy as np
 
 colors = {'hubert': 'cornflowerblue',
           'pa': 'tomato'}
+user = "pa"
+
+def get_coords_gpx(user,n_segments=None):
+    file = glob.glob(f'segments/{user}/*.gpx')[0] 
+    gpx_file = open(file, 'r') 
+    gpx = gpxpy.parse(gpx_file) 
+    coords_gpx = []
+    for track in gpx.tracks:
+        for s, segment in enumerate(gpx.tracks[0].segments):
+            if (user == 'hubert') & (s in [1, 6]):
+                continue
+            if n_segments and s >= n_segments:
+                return coords_gpx
+            for points in segment.points:
+                coords_gpx.append((points.latitude,points.longitude))
+    return coords_gpx
 
 
 def load_long_lat(user, n_segments=None):
