@@ -10,8 +10,8 @@ import contextily as ctx
 import numpy as np
 
 
-colors = {'hubert': 'cornflowerblue',
-          'pa': 'tomato'}
+manual_colors = {'hubert': 'cornflowerblue',
+                 'pa': 'tomato'}
 
 
 def load_long_lat(user, n_segments=None):
@@ -31,7 +31,10 @@ def load_long_lat(user, n_segments=None):
     pts = 0
     for track_i in gpx.tracks:
         for s, segment in enumerate(track_i.segments):
-            if (user == 'hubert') & (s in [1, 6]):
+
+            if (user == 'hubert') & (s in [1, 6, 30]):
+                continue
+            if (user == 'pa') & (s == 37):
                 continue
             if n_segments:
                 if s >= n_segments:
@@ -56,15 +59,23 @@ def load_long_lat(user, n_segments=None):
     return track, longs_tot, lats_tot
 
 
-def static_plot(track, longs_tot, lats_tot, user, fig, ax,
+def static_plot(gpx_infos, user, fig, ax,
                 x_min_global, x_max_global, y_min_global, y_max_global,
                 step, round,
                 with_map,
                 map_style,
                 colors,
+                density,
                 lws={'hubert': 5,
                      'pa': 5}):
-    lw = 0.8
+
+    track = gpx_infos[user]['track']
+    longs_tot = gpx_infos[user]['longs']
+    lats_tot = gpx_infos[user]['lats']
+    if density:
+        mask = gpx_infos[user]['mask']
+        counts = gpx_infos[user]['counts']
+    # lw = 0.8
     x_min = min(longs_tot) - 500
     x_max = max(longs_tot) + 500
     y_min = min(lats_tot) - 500
@@ -87,14 +98,28 @@ def static_plot(track, longs_tot, lats_tot, user, fig, ax,
         else:
             ctx.add_basemap(ax, source=ctx.providers.CartoDB.Positron)
     ax.set_axis_off()
-
+    seg_start = 0
     for segment in track:
         # xs = np.round(np.array(longs_tot['longs'][::step])/100, round)*100
         # ys = np.round(np.array(segment['lats'][::step])/0.1, round)*10
         # xs = np.round(np.array(segment['longs'][::step]), round)
         lats_tot = np.array(segment['lats'][::step])
         longs_tot = np.array(segment['longs'][::step])
-        ax.plot(longs_tot, lats_tot, color=colors[user], lw=lws[user]/10, alpha=0.7)
+        seg_end = seg_start + len(lats_tot)
+
+        if density:
+            lats_tot *= mask[seg_start:seg_end]
+            longs_tot *= mask[seg_start:seg_end]
+            ax.scatter(longs_tot, lats_tot,
+                       c=counts[seg_start:seg_end], s=0.5, alpha=1,
+                       cmap='Reds',
+                       vmin=0, vmax=5,
+                       marker='o')
+
+        else:
+            ax.plot(longs_tot, lats_tot, color=colors[user],
+                    lw=lws[user]/10,
+                    alpha=0.7)
 
     return fig, ax, x_min_global, x_max_global, y_min_global, y_max_global,
 
@@ -118,10 +143,10 @@ def compute_and_plot_track(users, step=2, round=10, with_map=True,
 
     for user in users:
         track, longs_tot, lats_tot = load_long_lat(user, n_segments=None)
-        if not map_style:
-            with_map = False
-        else:
-            with_map = with_map
+        # if not map_style:
+        #     with_map = False
+        # else:
+        #     with_map = with_map
 
         fig, ax, x_min_global, x_max_global, y_min_global, y_max_global, = \
             static_plot(track, longs_tot, lats_tot,
@@ -130,7 +155,8 @@ def compute_and_plot_track(users, step=2, round=10, with_map=True,
                         y_min_global, y_max_global,
                         step, round,
                         with_map,
-                        map_style)
+                        map_style,
+                        colors=manual_colors)
         if savefig:
             plt.savefig(f'new_track_{user}{suffix}.png', dpi=dpi)
     return longs_tot, lats_tot
@@ -164,11 +190,8 @@ def plot_track(users,
         else:
             with_map = with_map
 
-        track = gpx_infos[user]['track']
-        longs_tot = gpx_infos[user]['longs']
-        lats_tot = gpx_infos[user]['lats']
         fig, ax, x_min_global, x_max_global, y_min_global, y_max_global, = \
-            static_plot(track, longs_tot, lats_tot,
+            static_plot(gpx_infos,
                         user, fig, ax,
                         x_min_global, x_max_global,
                         y_min_global, y_max_global,

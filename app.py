@@ -1,16 +1,19 @@
 from nicegui import ui
-from utils import plot_track, load_long_lat
+from gui_utils import (plot_track,
+                       load_long_lat,
+                    #    calculate_track_density_and_mask,
+                       calculate_density_dbscan)
 import contextily as cx
 
 
 MAPS_OPTIONS = {
-    'Light (grey)': 'CartoDB.Positron',      # Clean, modern, low-contrast for data overlays
-    'OpenStreetMap (Standard)': 'OpenStreetMap.Mapnik',           # Default OSM tiles, balanced detail
-    'Satellite': 'Esri.WorldImagery',        # High-resolution satellite imagery
-    # 'Topographic': 'Stamen.Terrain',             # Topographic map with shaded relief
-    # 'High Contrast B&W': 'Stamen.Toner',           # Black-and-white map good for printing
-    'Dark Mode': 'CartoDB.DarkMatter',      # Dark-themed base map for night or contrast
-    # '(Elevation Focused': 'OpenTopoMap',             # Open-source terrain and elevation map
+    'Light (grey)': 'CartoDB.Positron',
+    'OpenStreetMap (Standard)': 'OpenStreetMap.Mapnik',
+    'Satellite': 'Esri.WorldImagery',
+    # 'Topographic': 'Stamen.Terrain',
+    # 'High Contrast B&W': 'Stamen.Toner',
+    'Dark Mode': 'CartoDB.DarkMatter',
+    # '(Elevation Focused': 'OpenTopoMap',
     'Detailed Streets': 'Esri.WorldStreetMap'  # Detailed street-level map
 }
 COLORS = ['blue', 'black', 'white', 'darkblue', 'red', 'tomato', 'forestgreen']
@@ -37,8 +40,10 @@ def get_map_style_object(map_path: str):
     return map_object
 
 
+density = False
 selected_names = []
 gpx_infos = {}
+gpx_density_infos = {}
 colors = {'hubert': 'cornflowerblue',
           'pa': 'tomato'}
 lws = {'hubert': 7,
@@ -53,24 +58,30 @@ def handle_map_change(event):
     selected_display_name = event.value
     selected_map_path = MAPS_OPTIONS[selected_display_name]
     current_map_object = get_map_style_object(selected_map_path)
-    display_map.refresh()
+    display_map.refresh(density)
 
 
 def handle_hubert_color_change(event):
     colors['hubert'] = event.value
-    display_map.refresh()
+    display_map.refresh(density)
 
 
 def handle_pa_color_change(event):
     colors['pa'] = event.value
-    display_map.refresh()
+    display_map.refresh(density)
 
 
 def handle_hubert_lw_change(event):
     lws['hubert'] = event.value
 
 
-def update_selection(name: str, is_checked: bool):
+def handle_density_plot_change(event):
+    global density
+    density = event.value
+    display_map.refresh(density)
+
+
+def update_gpx(name: str, is_checked: bool):
     """
     Updates the selected_names list based on the checkbox state.
     """
@@ -79,30 +90,60 @@ def update_selection(name: str, is_checked: bool):
         for name in selected_names:
             if name not in gpx_infos.keys():
                 gpx_infos[name] = {}
-                track, longs_tot, lats_tot = load_long_lat(name,
-                                                           n_segments=None)
+                track, longs_tot, lats_tot, times_tot = load_long_lat(
+                    name,
+                    n_segments=None)
                 gpx_infos[name]['longs'] = longs_tot
                 gpx_infos[name]['lats'] = lats_tot
                 gpx_infos[name]['track'] = track
-        display_map.refresh()
+
+            if name not in gpx_density_infos.keys():
+                gpx_density_infos[name] = {}
+                track, longs_tot, lats_tot, times_tot = load_long_lat(
+                    name,
+                    n_segments=None)
+                # pass_counts, visibility_mask = \
+                #     calculate_track_density_and_mask(
+                #         lats_tot, longs_tot, times_tot,
+                #         radius_meters=20, time_excl_seconds=60*5)
+                centers, pass_counts, labels = calculate_density_dbscan(
+                    longs_tot, lats_tot, times_tot,
+                    eps_meters=12,
+                    time_exclusion_seconds=120,
+                )
+                gpx_density_infos[name]['longs'] = longs_tot
+                gpx_density_infos[name]['lats'] = lats_tot
+                gpx_density_infos[name]['times_tot'] = times_tot
+                gpx_density_infos[name]['track'] = track
+                gpx_density_infos[name]['counts'] = pass_counts
+                gpx_density_infos[name]['centers'] = centers
+                gpx_density_infos[name]['labels'] = labels
+
+        display_map.refresh(density)
 
     elif not is_checked and name in selected_names:
         selected_names.remove(name)
-        display_map.refresh()
+        display_map.refresh(density)
 
 
 @ui.refreshable
-def display_map():
+def display_map(density):
     map = current_map_object
+    if density:
+        print('using density infos')
+        gpx_to_use = gpx_density_infos
+    else:
+        print('using raw infos')
+        gpx_to_use = gpx_infos
     if len(selected_names) == 0:
         ui.label("Please select at least one run type to display.").classes(
             'text-lg text-gray-500 italic')
     else:
-        with ui.row().classes(
-            'justify-center w-full p-4').style('margin-top: -80px;'):
+        with ui.row().classes('justify-center w-full p-4').style('margin-top: -80px;'):
             with ui.pyplot(figsize=(10, 10)):
                 plot_track(selected_names,
-                           gpx_infos,
+                           gpx_to_use,
+                           density,
                            colors,
                            lws=lws,
                            step=2,
@@ -129,12 +170,19 @@ with ui.column().classes('items-center w-full p-4'):
 
         ui.separator()
 
+        ui.checkbox(
+            'Density plot',
+            value=False,
+            on_change=handle_density_plot_change
+            )
+        ui.separator()
+
         # Hubert section
         with ui.grid(columns=4).classes('gap-4 items-center mt-4'):
             ui.checkbox(
                 'Hubert',
                 value=True,
-                on_change=lambda e: update_selection('hubert', e.value)
+                on_change=lambda e: update_gpx('hubert', e.value)
             )
             ui.label("Hubert Color").classes('text-sm text-gray-600')
             ui.select(
@@ -156,7 +204,7 @@ with ui.column().classes('items-center w-full p-4'):
             ui.checkbox(
                 'Pierre-Antoine',
                 value=False,
-                on_change=lambda e: update_selection('pa', e.value)
+                on_change=lambda e: update_gpx('pa', e.value)
             )
             ui.label("PA Color").classes('text-sm text-gray-600')
             ui.select(
@@ -164,8 +212,8 @@ with ui.column().classes('items-center w-full p-4'):
                 on_change=handle_pa_color_change,
             ).classes('w-full col-span-2')
 
-update_selection('hubert', True)
-display_map()
+update_gpx('hubert', True)
+display_map(density)
 
 ui.page.title = "Bike it"
 ui.run()
