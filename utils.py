@@ -1,454 +1,265 @@
-import geopandas as gpd
-from scipy.spatial import KDTree
+import pandas as pd
 import gpxpy
 import glob
-# from shapely.geometry import LineString
-import matplotlib.pyplot as plt
-# from shapely.geometry import Point
-import contextily as ctx
-# import matplotlib.animation as animation
 import numpy as np
+import osmnx as ox
+import os
+import ast
+import matplotlib.pyplot as plt
 
 
-colors = {'hubert': 'cornflowerblue',
-          'pa': 'tomato'}
-user = "pa"
+def get_graph_stats(graph):
+    G_proj = ox.projection.project_graph(graph)
+    nodes_proj = ox.convert.graph_to_gdfs(G_proj, edges=False)
+    graph_area_m = nodes_proj.union_all().convex_hull.area
+    graph_area_m = nodes_proj.union_all().convex_hull.area
+    stats = ox.stats.basic_stats(G_proj, area=graph_area_m, clean_int_tol=15)
+    return stats
 
-def get_coords_gpx(user,n_segments=None):
+def get_all_edge_data(graph, coords_list):
+
+    lats = [c[0] for c in coords_list]
+    lons = [c[1] for c in coords_list]
+
+    u_ids, v_ids, keys = ox.nearest_edges(graph, X=lons, Y=lats)
+
+    gdf_edges = ox.graph_to_gdfs(graph, nodes=False, fill_edge_geometry=False)
+
+    results = []
+    
+    for u, v, k in zip(u_ids, v_ids, keys):
+        edge_data = gdf_edges.loc[(u, v, k)]
+        
+        if type(edge_attributes.get('name')) == str:  
+            street_name = edge_attributes.get('name') #usually a string
+        else:
+            try:
+                street_name = edge_attributes.get('name')[0] #edge with coords (41.4049091 2.1738864), (41.4052928 2.1755545) has Provenca and Marina
+            except:
+                street_name = "Unkwown" # edge from point 867 or 868 from PA has no street name
+    #print(type(street_name),street_name)
+        
+        length = edge_data.get('length', 0)
+        
+        results.append(((u, v, k), street_name, length))
+        
+    return results
+
+def save_last_read_gps_point(i,district,user):
+    os.makedirs("edges/"+user,exist_ok=True)
+    file_list_edges = "edges/last_gpx_point_"+district+"-"+user+".txt"
+    with open(file_list_edges, "w") as f:
+           f.write(str(i))
+
+def get_coords_date_gpx(user):
     file = glob.glob(f'segments/{user}/*.gpx')[0] 
     gpx_file = open(file, 'r') 
     gpx = gpxpy.parse(gpx_file) 
     coords_gpx = []
     for track in gpx.tracks:
-        for s, segment in enumerate(gpx.tracks[0].segments):
+        for s, segment in enumerate(track.segments):
             if (user == 'hubert') & (s in [1, 6]):
                 continue
-            if n_segments and s >= n_segments:
-                return coords_gpx
             for points in segment.points:
                 coords_gpx.append((points.latitude,points.longitude))
-    return coords_gpx
+    return coords_gpx, points.time
 
+def get_list_edges(graph, coords_gpx, district, user, start=None):
+    os.makedirs("edges/"+user,exist_ok=True)
+    file_list_edges = "edges/"+user+"/list_edges_"+district+"-"+user+".txt"
+    list_edges = []
+    if start and os.path.isfile(file_list_edges):
+        print("Reading from previous list of edges")
+        with open(file_list_edges, "r") as f:
+            for line in f:
+                if line.strip():
+                    list_edges.append(ast.literal_eval(line))
+    else:
+        print("Starting new list of edges")
+        with open(file_list_edges, "w") as f:
+            pass 
 
-def load_long_lat(user, n_segments=None):
+    idx_start = start if start is not None else 0
+    to_process = coords_gpx[idx_start:]
+    
+    if not to_process:
+        return list_edges
 
-    # Parsing an existing file:
-    # -------------------------
-    file = glob.glob(f'segments/{user}/*.gpx')[0]
-    gpx_file = open(file, 'r')
+    lats = [c[0] for c in to_process]
+    lons = [c[1] for c in to_process]
 
-    gpx = gpxpy.parse(gpx_file)
-    track = []
-    lats_tot = []
-    longs_tot = []
-    # xs_nc = []
-    # ys_nc = []
-    # cuts = []
-    pts = 0
-    for track_i in gpx.tracks:
-        for s, segment in enumerate(track_i.segments):
-            if (user == 'hubert') & (s in [1, 6]):
-                continue
-            if n_segments:
-                if s >= n_segments:
-                    return track, longs_tot, lats_tot
-            longs = []
-            lats = []
-            for point in segment.points:
-                lats.append(point.latitude)
-                longs.append(point.longitude)
-                pts += 1
-            gdf_points = gpd.GeoDataFrame(
-                geometry=gpd.points_from_xy(longs, lats),
-                crs="EPSG:4326")
-            gdf_points = gdf_points.to_crs(epsg=3857)
-            xs_merc, ys_merc = zip(*[(p.x, p.y) for p in gdf_points.geometry])
-            xs_merc = np.array(xs_merc)
-            ys_merc = np.array(ys_merc)
-            track.append({'lats': ys_merc,
-                          'longs': xs_merc})
-            longs_tot.extend(xs_merc)
-            lats_tot.extend(ys_merc)
-    return track, longs_tot, lats_tot
+    edges = ox.nearest_edges(graph, X=lons, Y=lats)
 
+    gdf_edges = ox.graph_to_gdfs(graph, nodes=False)
 
-def static_plot(track, longs_tot, lats_tot, user, fig, ax,
-                x_min_global, x_max_global, y_min_global, y_max_global,
-                step, round,
-                with_map,
-                map_style,
-                colors,
-                lws={'hubert': 5,
-                     'pa': 5}):
-    lw = 0.8
-    x_min = min(longs_tot) - 500
-    x_max = max(longs_tot) + 500
-    y_min = min(lats_tot) - 500
-    y_max = max(lats_tot) + 500
+    with open(file_list_edges, "a") as f:
+        for u, v, k in edges:
+            edge_attributes = gdf_edges.loc[(u, v, k)]
+            if type(edge_attributes.get('name')) == str:  
+                street_name = edge_attributes.get('name')
+            else:
+                try:
+                    street_name = edge_attributes.get('name')[0]
+                except:
+                    street_name = "Unkwown"
+            length_edge = float(edge_attributes.get('length'))
+            edge_data = ((u, v, k), street_name, length_edge)
 
-    if x_min_global > x_min:
-        x_min_global = x_min
-    if x_max_global < x_min:
-        x_max_global = x_max
-    if y_min_global > y_min:
-        y_min_global = y_min
-    if y_max_global < y_min:
-        y_max_global = y_max
+            if edge_data not in list_edges:
+                list_edges.append(edge_data)
+                f.write(f"{edge_data}\n")
 
-    ax.set_xlim(x_min_global, x_max_global)
-    ax.set_ylim(y_min_global, y_max_global)
-    if with_map:
-        if map_style:
-            ctx.add_basemap(ax, source=map_style)
+    save_last_read_gps_point(get_coords_date_gpx(user)[0], district, user)
+    
+    return list_edges
+
+def load_last_gps_point(district,user):
+    try:
+        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txt"
+        with open(file_list_edges, "r") as f:
+            return int(f.read())
+    except:
+        return None
+    
+def generate_list_edges(graph_dict,user,district):
+    list_edges_read={}
+    last_gps_point = load_last_gps_point(district,user)
+    print("last_gps_point",last_gps_point)
+    coords=get_coords_date_gpx(user)[0]
+    list_edges_read[district] = get_list_edges(graph_dict[district],coords,district,user,last_gps_point)
+    return list_edges_read
+
+def highlight_edges(graph,list_edges,user,district,color):
+    highlighted_edges_set={}
+    highlighted_edges_set[user] = {
+        data[0] 
+        for data in list_edges[user][district]
+    }
+    edge_colors = []
+    for u, v, k in graph.edges(keys=True):
+        edge_id = (u, v, k)
+    
+        if edge_id in highlighted_edges_set[user]:
+            edge_colors.append(color)
         else:
-            ctx.add_basemap(ax, source=ctx.providers.CartoDB.Positron)
-    ax.set_axis_off()
+            edge_colors.append("grey")
+    return edge_colors
 
-    for segment in track:
-        # xs = np.round(np.array(longs_tot['longs'][::step])/100, round)*100
-        # ys = np.round(np.array(segment['lats'][::step])/0.1, round)*10
-        # xs = np.round(np.array(segment['longs'][::step]), round)
-        lats_tot = np.array(segment['lats'][::step])
-        longs_tot = np.array(segment['longs'][::step])
-        ax.plot(longs_tot, lats_tot, color=colors[user], lw=lws[user]/10, alpha=0.7)
-
-    return fig, ax, x_min_global, x_max_global, y_min_global, y_max_global,
-
-
-def compute_and_plot_track(users, step=2, round=10, with_map=True,
-                           dpi=500, savefig=True,
-                           nicegui=False,
-                           map_style=False):
-    if nicegui:
-        fig = plt.gcf()
-        fig.clf()  # Clear any previous plots from the figure
-        ax = fig.subplots()
-    else:
-        fig, ax = plt.subplots(figsize=(8, 8))
-    if not with_map:
-        suffix = '_blankmap'
-    else:
-        suffix = ''
-    x_min_global, x_max_global, y_min_global, y_max_global = \
-        np.inf, -np.inf, np.inf, -np.inf
-
-    for user in users:
-        track, longs_tot, lats_tot = load_long_lat(user, n_segments=None)
-        if not map_style:
-            with_map = False
-        else:
-            with_map = with_map
-
-        fig, ax, x_min_global, x_max_global, y_min_global, y_max_global, = \
-            static_plot(track, longs_tot, lats_tot,
-                        user, fig, ax,
-                        x_min_global, x_max_global,
-                        y_min_global, y_max_global,
-                        step, round,
-                        with_map,
-                        map_style)
-        if savefig:
-            plt.savefig(f'new_track_{user}{suffix}.png', dpi=dpi)
-    return longs_tot, lats_tot
-
-
-def plot_track(users,
-               gpx_infos,
-               colors,
-               lws,
-               step=2, round=10, with_map=True,
-               dpi=500, savefig=True,
-               nicegui=False,
-               map_style=False):
-
-    if nicegui:
-        fig = plt.gcf()
-        fig.clf()  # Clear any previous plots from the figure
-        ax = fig.subplots()
-    else:
-        fig, ax = plt.subplots(figsize=(8, 8))
-    if not with_map:
-        suffix = '_blankmap'
-    else:
-        suffix = ''
-    x_min_global, x_max_global, y_min_global, y_max_global = \
-        np.inf, -np.inf, np.inf, -np.inf
-
-    for user in users:
-        if not map_style:
-            with_map = False
-        else:
-            with_map = with_map
-
-        track = gpx_infos[user]['track']
-        longs_tot = gpx_infos[user]['longs']
-        lats_tot = gpx_infos[user]['lats']
-        fig, ax, x_min_global, x_max_global, y_min_global, y_max_global, = \
-            static_plot(track, longs_tot, lats_tot,
-                        user, fig, ax,
-                        x_min_global, x_max_global,
-                        y_min_global, y_max_global,
-                        step, round,
-                        with_map,
-                        map_style,
-                        colors,
-                        lws)
-        if savefig:
-            plt.savefig(f'new_track_{user}{suffix}.png', dpi=dpi)
-
-
-def calculate_track_density_no_mask(easting, northing,
-                                    radius_meters=50.0, time_excl_window=50):
-    """
-    Calculates the passage density for each point,
-    assuming coordinates are in a
-    meter-based Projected Coordinate Syste
-    (e.g., UTM Easting/Northing).
-
-    :param easting: List or array of Easting coordinates (X).
-    :param northing: List or array of Northing coordinates (Y).
-    :param radius_meters: The spatial distance (in meters)
-                         for considering points as "same road".
-    :param time_excl_window: The number of indices (points) before and after
-                             to exclude from the count.
-    :return: A numpy array of pass counts for each point.
-    """
-    if len(easting) != len(northing) or len(easting) == 0:
-        return np.array([])
-
-    # Combine X and Y coordinates (Easting, Northing)
-    points = np.column_stack((easting, northing))
-
-    # --- 1. Build KD-Tree ---
-    tree = KDTree(points)
-
-    # The search radius 'r' is simply the required distance in meters.
-    # The KD-Tree's Euclidean distance calculation is accurate here.
-    search_radius = radius_meters
-
-    # --- 2. Iterate, Query, and Filter ---
-    n_points = len(points)
-    pass_counts = np.zeros(n_points, dtype=int)
-
-    for i in range(n_points):
-        # Spatial Query: Find all point indices
-        # within the search_radius (5.0 meters)
-        neighbor_indices = tree.query_ball_point(points[i], r=search_radius)
-
-        # Time-based Exclusion: Define the window of indices to ignore
-        min_idx = max(0, i - time_excl_window)
-        max_idx = min(n_points - 1, i + time_excl_window)
-
-        # We pre-calculate the exclusion set for fast lookups
-        exclusion_set = set(range(min_idx, max_idx + 1))
-
-        final_count = 0
-        for neighbor_idx in neighbor_indices:
-            # Only count the neighbor if it's NOT within
-            # the temporal exclusion window
-            if neighbor_idx not in exclusion_set:
-                final_count += 1
-
-        # Add 1 to include the point itself as a "pass"
-        pass_counts[i] = final_count + 1
-
-    return pass_counts
-
-
-def static_plot_density_no_mask(
-        track, longs_tot, lats_tot, counts, user, fig, ax,
-        x_min_global, x_max_global, y_min_global, y_max_global,
-        step, round):
-
-    x_min = min(longs_tot) - 500
-    x_max = max(longs_tot) + 500
-    y_min = min(lats_tot) - 500
-    y_max = max(lats_tot) + 500
-
-    if x_min_global > x_min:
-        x_min_global = x_min
-    if x_max_global < x_min:
-        x_max_global = x_max
-    if y_min_global > y_min:
-        y_min_global = y_min
-    if y_max_global < y_min:
-        y_max_global = y_max
-
-    ax.set_xlim(x_min_global, x_max_global)
-    ax.set_ylim(y_min_global, y_max_global)
-
-    ctx.add_basemap(ax, source=ctx.providers.CartoDB.Voyager)
-    ax.set_axis_off()
-    seg_start = 0
-    for segment in track:
-        lats_tot = np.array(segment['lats'][::step])
-        longs_tot = np.array(segment['longs'][::step])
-        seg_end = seg_start + len(lats_tot)
-        ax.scatter(longs_tot, lats_tot,
-                   c=counts[seg_start:seg_end], s=1,
-                   cmap='Blues', vmin=0, vmax=3)
-        seg_start = seg_end
-    fig.savefig(
-        f'{user}_density_mo_mask_step-{step}_round-{round}.png', dpi=700)
-    return fig, ax, x_min_global, x_max_global, y_min_global, y_max_global
-
-
-def plot_track_density_no_mask(users):
-    fig, ax = plt.subplots(figsize=(8, 8))
-    x_min_global, x_max_global, y_min_global, y_max_global = \
-        np.inf, -np.inf, np.inf, -np.inf
-    for user in users:
-        track, xs_tot, ys_tot = load_long_lat(user, n_segments=None)
-        pass_counts = calculate_track_density_no_mask(
-            ys_tot, xs_tot, radius_meters=10, time_excl_window=1,)
-        fig, ax, x_min_global, x_max_global, y_min_global, y_max_global = \
-            static_plot_density_no_mask(
-                track, xs_tot, ys_tot, pass_counts, user, fig, ax,
-                x_min_global, x_max_global, y_min_global, y_max_global,
-                step=1, round=5)
+#generalize this and the function below to have a way to plot by user and district and loop over this
+def plot_mapped(graph_dict,list_edges,user,district,color):
+    os.makedirs("plots/"+user,exist_ok=True)
+    date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
+    print(district)
+    edge_colors = {}
+    edge_colors[district] = highlight_edges(graph_dict,list_edges,user,district,color)
+    fig, ax = ox.plot.plot_graph(
+            graph_dict,
+            edge_color=edge_colors[district],
+            edge_linewidth=1.5,
+            show=False,
+            close=False,
+            node_zorder=0,
+            bgcolor="w"
+        )
+    ax.set_title(district+"-"+user)
     plt.show()
-    return xs_tot, ys_tot
+    fig.savefig("plots/"+user+"/"+district.replace(" ","_")+"-"+user+"."+date+".jpg", dpi=300, bbox_inches='tight')
 
+def get_number_of_mapped_streets(list_edges):
+    mapped_street_names = [edge_data[1] for edge_data in list_edges]
+    return len(set(mapped_street_names))
 
-def calculate_track_density_and_mask(easting, northing, radius_meters,
-                                     time_excl_window=10):
-    """
-    Calculates the passage density and a visibility mask for each point,
-    ensuring counts are aggregated onto the *first* point of a segment,
-    and subsequent passages are masked.
+def get_number_of_streets(graph):
+    
+    unique_street_names_from_G = set()
 
-    :param easting: List or array of Easting coordinates (X).
-    :param northing: List or array of Northing coordinates (Y).
-    :param radius_meters: The spatial distance (in meters)
-    for considering points as "same road".
-    :param time_excl_window: The number of indices (points) before and after
-                             to exclude from the count.
-    :return: A tuple (final_pass_counts, visibility_mask).
-    """
-    if len(easting) != len(northing) or len(easting) == 0:
-        return np.array([]), np.array([])
+# Iterate over all edges in the graph, retrieving the attribute data for each edge
+# We use keys=False because the u, v, k are not strictly needed for this task,
+# only the data dictionary is.
+    for _, _, data in graph.edges(data=True):
+    # The street name is stored under the key 'name'
+        name_entry = data.get('name')
+    
+    # Check if the 'name' attribute exists
+        if name_entry is not None:
+            
+            if isinstance(name_entry, list):
+                # If the value is a list (multiple names), add all individual names to the set
+                for name in name_entry:
+                    unique_street_names_from_G.add(name)
+            elif isinstance(name_entry, str):
+            # If the value is a single string, add it to the set
+                unique_street_names_from_G.add(name_entry)
 
-    points = np.column_stack((easting, northing))
-    n_points = len(points)
+# The count of unique street names is the length of the final set
+    count_unique_names_G = len(unique_street_names_from_G)
+    #print("Total number of streets",count_unique_names_G)
+    return count_unique_names_G
 
-    # --- 1. Build KD-Tree ---
-    tree = KDTree(points)
-    search_radius = radius_meters
+def get_final_stats(user,list_edges,graph_dict,list_districts,stats,date):
+  #  date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
+    stats_file = "stats-"+user+'-'+date+".csv"
+    try:
+        if os.path.isfile('stats-'+user+'-'+date+'.csv'):
+            prev_stats_file = sorted(glob.glob('stats-'+user+'-*.csv'))[-2]
+        else:
+            prev_stats_file = sorted(glob.glob('stats-'+user+'-*.csv'))[-1]
+        df_prev = pd.read_csv(prev_stats_file, index_col=0)
+        print("loading previous stats")
+    except:
+        df_prev = []
+    print("creating new stats file")
+    number_of_mapped_streets = []
+    total_number_of_streets = []
+    number_of_mapped_segments = []
+    total_number_of_segments = []
+    mapped_kms = []
+    total_street_length = []
 
-    # --- 2. Initialize Outputs ---
-    # We only need the final outputs, initialized to zero/True
-    final_pass_counts = np.zeros(n_points, dtype=int)
-    visibility_mask = np.ones(n_points, dtype=bool)
+    for district in list_districts:
+        number_of_mapped_streets.append(get_number_of_mapped_streets(list_edges[user][district]))
+        total_number_of_streets.append(get_number_of_streets(graph_dict[district]))
+        number_of_mapped_segments.append(len(list_edges[user][district]))
+        total_number_of_segments.append(stats[district]["m"])
+        mapped_kms.append(sum(edge[2] for edge in list_edges[user][district])/1000)
+        total_street_length.append(stats[district]["edge_length_total"]/1000)
 
-    # --- 3. Single Pass Aggregation (Combines original Steps 3 & 4 logic) ---
-    for i in range(n_points):
-        # Only proceed if this point hasn't been masked by an earlier neighbor
-        if not visibility_mask[i]:
-            continue
+    df = pd.DataFrame({
+        "number of mapped streets": number_of_mapped_streets,
+        "total number of streets": total_number_of_streets,
+        "percentage street": np.array(number_of_mapped_streets)/np.array(total_number_of_streets)*100,
+        "number of mapped segments ": number_of_mapped_segments,
+        "total number of segments" : total_number_of_segments, 
+        "percentage segments": np.array(number_of_mapped_segments)/np.array(total_number_of_segments)*100,
+        "mapped kms": mapped_kms,
+        "total street length": total_street_length,
+        "percentage km": np.array(mapped_kms)/np.array(total_street_length)*100
+    })
+    df.to_csv(stats_file)
+    return df,df_prev
+    
+def plot_stats(final_table,previous_table,list_districts):
+    if isinstance(previous_table, pd.DataFrame) and not previous_table.empty:
+        diff = np.abs(final_table.subtract(previous_table, fill_value=0))
+    
+        display_cols = []
+        new_data = {}
 
-        # If we reach here, point 'i' is the first point of its segment
-        # (or the first point of a new passage). It is VISIBLE.
+        for col in final_table.columns:
+            new_data[col] = final_table[col]
+            display_cols.append(col)
+            if (diff[col] != 0).any() and col != "total street length" :
+                delta_col_name = "diff "+ col
+                new_data[delta_col_name] = diff[col].apply(lambda x: round(x, 2))
+                display_cols.append(delta_col_name)
 
-        # Spatial Query: Find all point indices within the search_radius
-        # Note: Includes point i itself.
-        neighbor_indices = tree.query_ball_point(points[i], r=search_radius)
+            df_display = pd.DataFrame(new_data, index=final_table.index)[display_cols]
+    else:
+        df_display = final_table
+    return df_display.style \
+        .format(precision=1) \
+        .format_index(str.upper, axis=0) \
+        .relabel_index(list_districts, axis=0) \
+    .apply(lambda x: ['color: green; font-weight: bold' if 'diff' in x.name else '' 
+                      for val in x], axis=0)
 
-        # Initialize count with point 'i' itself (1 pass)
-        count = 1
-
-        # Check all subsequent neighbors (k > i)
-        for k in neighbor_indices:
-
-            # --- Condition for Re-Passage ---
-            # 1. k must be later than i (k > i)
-            # 2. k must be temporally distant from i (k - i > time_excl_window)
-
-            if k > i and k - i > time_excl_window:
-                # Point k is a subsequent,
-                # distant passage to the same location.
-
-                # Check if point k was *already* claimed
-                #  and masked by an earlier point j < i.
-                # If visibility_mask[k] is already False,
-                #  it means a point j (i < j < k)
-                # already took the credit. We skip it to avoid double-counting.
-                if visibility_mask[k]:
-                    # This point 'k' is a valid re-visit
-                    #  that hasn't been claimed yet.
-                    count += 1
-
-                    # MASK IT: Ensure this subsequent
-                    #  passage point 'k' is hidden.
-                    visibility_mask[k] = False
-
-        # Assign the total aggregated count to
-        # the *visible* representative point 'i'
-        final_pass_counts[i] = count
-
-    return final_pass_counts, visibility_mask
-
-
-def static_plot_density_mask(
-        track, longs_tot, lats_tot, counts, mask, user, fig, ax,
-        x_min_global, x_max_global, y_min_global, y_max_global,
-        step, round):
-
-    x_min = min(longs_tot) - 500
-    x_max = max(longs_tot) + 500
-    y_min = min(lats_tot) - 500
-    y_max = max(lats_tot) + 500
-
-    if x_min_global > x_min:
-        x_min_global = x_min
-    if x_max_global < x_min:
-        x_max_global = x_max
-    if y_min_global > y_min:
-        y_min_global = y_min
-    if y_max_global < y_min:
-        y_max_global = y_max
-
-    ax.set_xlim(x_min_global, x_max_global)
-    ax.set_ylim(y_min_global, y_max_global)
-
-    ctx.add_basemap(ax, source=ctx.providers.CartoDB.Voyager)
-    ax.set_axis_off()
-    seg_start = 0
-    # print(np.shape(mask))
-    # print(np.shape(longs_tot))
-    # print(np.shape(counts))
-    for segment in track:
-        lats_tot = np.array(segment['lats'][::step])
-        longs_tot = np.array(segment['longs'][::step])
-        seg_end = seg_start + len(lats_tot)
-        # print(np.shape(lats_tot))
-        # print(np.shape(mask[seg_start:seg_end]))
-        lats_tot *= mask[seg_start:seg_end]
-        longs_tot *= mask[seg_start:seg_end]
-        ax.scatter(longs_tot, lats_tot,
-                   c=counts[seg_start:seg_end], s=0.5, alpha=1,
-                   cmap='Reds',
-                   vmin=0, vmax=5,
-                   marker='o')
-
-        seg_start = seg_end
-    fig.savefig(
-        f'{user}_density_mask_step-{step}_round-{round}.png', dpi=500)
-    return fig, ax, x_min_global, x_max_global, y_min_global, y_max_global
-
-
-def plot_track_density_mask(users, step, radius_meters, time_excl_window):
-    fig, ax = plt.subplots(figsize=(8, 8))
-    x_min_global, x_max_global, y_min_global, y_max_global = \
-        np.inf, -np.inf, np.inf, -np.inf
-    for user in users:
-        track, xs_tot, ys_tot = load_long_lat(user, n_segments=None)
-        pass_counts, visibility_mask = calculate_track_density_and_mask(
-            ys_tot[::step], xs_tot[::step], radius_meters, time_excl_window)
-        fig, ax, x_min_global, x_max_global, y_min_global, y_max_global = \
-            static_plot_density_mask(
-                track, xs_tot, ys_tot, pass_counts, visibility_mask,
-                user, fig, ax,
-                x_min_global, x_max_global, y_min_global, y_max_global,
-                step=step, round=5)
-    plt.show()
-    return xs_tot, ys_tot
