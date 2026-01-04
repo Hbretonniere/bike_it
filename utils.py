@@ -68,6 +68,7 @@ def get_list_edges(graph, coords_gpx, district, user, start=None):
     os.makedirs("edges/"+user,exist_ok=True)
     file_list_edges = "edges/"+user+"/list_edges_"+district+"-"+user+".txt"
     list_edges = []
+    
     if start and os.path.isfile(file_list_edges):
         print("Reading from previous list of edges")
         with open(file_list_edges, "r") as f:
@@ -121,15 +122,18 @@ def load_last_gps_point(district,user):
     except:
         return None
     
-def generate_list_edges(graph_dict,user,district):
+
+def generate_list_edges(graph_dict,user,list_districts):
     list_edges_read={}
-    last_gps_point = load_last_gps_point(district,user)
-    print("last_gps_point",last_gps_point)
-    coords=get_coords_date_gpx(user)[0]
-    list_edges_read[district] = get_list_edges(graph_dict[district],coords,district,user,last_gps_point)
+    for district in list_districts:
+        print(district)
+        last_gps_point = load_last_gps_point(district,user)
+        print("last_gps_point",last_gps_point)
+        coords=get_coords_date_gpx(user)[0]
+        list_edges_read[district] = get_list_edges(graph_dict[district],coords,district,user,last_gps_point)
     return list_edges_read
 
-def highlight_edges(graph,list_edges,user,district,color):
+def highlight_edges(graph,list_edges,user,color,district):
     highlighted_edges_set={}
     highlighted_edges_set[user] = {
         data[0] 
@@ -146,15 +150,18 @@ def highlight_edges(graph,list_edges,user,district,color):
     return edge_colors
 
 #generalize this and the function below to have a way to plot by user and district and loop over this
-def plot_mapped(graph_dict,list_edges,user,district,color):
-    os.makedirs("plots/"+user,exist_ok=True)
+
+def plot_mapped(graph_dict,list_edges,user,district,edge_colors,color):
+    try:
+        os.makedirs("plots/"+user)
+    except:
+        pass
     date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
     print(district)
-    edge_colors = {}
-    edge_colors[district] = highlight_edges(graph_dict,list_edges,user,district,color)
+    edge_colors[district]= highlight_edges(graph_dict,list_edges,user,color,district)
     fig, ax = ox.plot.plot_graph(
             graph_dict,
-            edge_color=edge_colors[district],
+            edge_color=edge_colors[user][district],
             edge_linewidth=1.5,
             show=False,
             close=False,
@@ -166,7 +173,7 @@ def plot_mapped(graph_dict,list_edges,user,district,color):
     fig.savefig("plots/"+user+"/"+district.replace(" ","_")+"-"+user+"."+date+".jpg", dpi=300, bbox_inches='tight')
 
 def get_number_of_mapped_streets(list_edges):
-    mapped_street_names = [edge_data[1] for edge_data in list_edges]
+    mapped_street_names = [edge_data for edge_data in list_edges]
     return len(set(mapped_street_names))
 
 def get_number_of_streets(graph):
@@ -196,70 +203,77 @@ def get_number_of_streets(graph):
     #print("Total number of streets",count_unique_names_G)
     return count_unique_names_G
 
-def get_final_stats(user,list_edges,graph_dict,list_districts,stats,date):
-  #  date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
-    stats_file = "stats-"+user+'-'+date+".csv"
+def get_final_stats(user,list_edges,graph_dict,list_districts,stats):
+    date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
+    stats_file = "stats-"+user+'_'+date+".csv"
     try:
-        if os.path.isfile('stats-'+user+'-'+date+'.csv'):
-            prev_stats_file = sorted(glob.glob('stats-'+user+'-*.csv'))[-2]
-        else:
-            prev_stats_file = sorted(glob.glob('stats-'+user+'-*.csv'))[-1]
-        df_prev = pd.read_csv(prev_stats_file, index_col=0)
-        print("loading previous stats")
+        prev_stats_file = sorted(glob.glob('stats-'+user+'_*.csv'))[-1]
+        df_prev = pd.read_csv(prev_stats_file)
+        print("loading previous stats",prev_stats_file)
     except:
         df_prev = []
-    print("creating new stats file")
-    number_of_mapped_streets = []
-    total_number_of_streets = []
-    number_of_mapped_segments = []
-    total_number_of_segments = []
-    mapped_kms = []
-    total_street_length = []
+    if os.path.exists(stats_file):
+        df = pd.read_csv(stats_file)
+        print("reading from current file",stats_file)
+    else:
+        print("creating new stats file")
+        number_of_mapped_streets = []
+        total_number_of_streets = []
+        number_of_mapped_segments = []
+        total_number_of_segments = []
+        mapped_kms = []
+        total_street_length = []
 
-    for district in list_districts:
-        number_of_mapped_streets.append(get_number_of_mapped_streets(list_edges[user][district]))
-        total_number_of_streets.append(get_number_of_streets(graph_dict[district]))
-        number_of_mapped_segments.append(len(list_edges[user][district]))
-        total_number_of_segments.append(stats[district]["m"])
-        mapped_kms.append(sum(edge[2] for edge in list_edges[user][district])/1000)
-        total_street_length.append(stats[district]["edge_length_total"]/1000)
+        for district in list_districts:
+            number_of_mapped_streets.append(get_number_of_mapped_streets(list_edges[user][district]))
+            total_number_of_streets.append(get_number_of_streets(graph_dict[district]))
+            number_of_mapped_segments.append(len(list_edges[user][district]))
+            total_number_of_segments.append(stats[district]["m"])
+            mapped_kms.append(sum(edge[2] for edge in list_edges[user][district])/1000)
+            total_street_length.append(stats[district]["edge_length_total"]/1000)
 
-    df = pd.DataFrame({
-        "number of mapped streets": number_of_mapped_streets,
-        "total number of streets": total_number_of_streets,
-        "percentage street": np.array(number_of_mapped_streets)/np.array(total_number_of_streets)*100,
-        "number of mapped segments ": number_of_mapped_segments,
-        "total number of segments" : total_number_of_segments, 
-        "percentage segments": np.array(number_of_mapped_segments)/np.array(total_number_of_segments)*100,
-        "mapped kms": mapped_kms,
-        "total street length": total_street_length,
-        "percentage km": np.array(mapped_kms)/np.array(total_street_length)*100
-    })
-    df.to_csv(stats_file)
+        df = pd.DataFrame({
+            "districts": list_districts,
+            "number of mapped streets": number_of_mapped_streets,
+            "total number of streets": total_number_of_streets,
+            "percentage street": np.array(number_of_mapped_streets)/np.array(total_number_of_streets)*100,
+            "number of mapped segments ": number_of_mapped_segments,
+            "total number of segments" : total_number_of_segments, 
+            "percentage segments": np.array(number_of_mapped_segments)/np.array(total_number_of_segments)*100,
+            "mapped kms": mapped_kms,
+            "total street length": total_street_length,
+            "percentage km": np.array(mapped_kms)/np.array(total_street_length)*100
+        })
+    #    df.set_index('districts')
+        df.to_csv(stats_file,index=False)
     return df,df_prev
     
 def plot_stats(final_table,previous_table,list_districts):
     if isinstance(previous_table, pd.DataFrame) and not previous_table.empty:
-        diff = np.abs(final_table.subtract(previous_table, fill_value=0))
-    
+        print("previous")
+        diff = final_table.set_index("districts").subtract(previous_table.set_index("districts"), fill_value=0).abs()
+        diff = diff.reset_index()
         display_cols = []
         new_data = {}
 
         for col in final_table.columns:
+            if col == "districts":
+                continue
             new_data[col] = final_table[col]
             display_cols.append(col)
-            if (diff[col] != 0).any() and col != "total street length" :
+        
+            if (diff[col] != 0).any():
                 delta_col_name = "diff "+ col
-                new_data[delta_col_name] = diff[col].apply(lambda x: round(x, 2))
+                new_data[delta_col_name] = diff[col]
                 display_cols.append(delta_col_name)
 
             df_display = pd.DataFrame(new_data, index=final_table.index)[display_cols]
     else:
         df_display = final_table
+        print("no previous")
     return df_display.style \
         .format(precision=1) \
         .format_index(str.upper, axis=0) \
         .relabel_index(list_districts, axis=0) \
     .apply(lambda x: ['color: green; font-weight: bold' if 'diff' in x.name else '' 
                       for val in x], axis=0)
-

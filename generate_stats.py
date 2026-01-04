@@ -75,21 +75,27 @@ stats={}
 for district in list_districts:
     print("Computing stats for", district)
     stats[district]=get_graph_stats(graph_dict[district])
-
+    
 list_edges = {}
+edge_colors={}
+edge_colors={}
+
 for user in users:
     coords_date_gpx_pa,date_date_last_pa = get_coords_date_gpx(user)
     date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
+    edge_colors[user]={}
+    list_edges[user] = generate_list_edges(graph_dict,user,list_districts)
     for district in list_districts:
-        list_edges[user] = generate_list_edges(graph_dict,user,district)
+        edge_colors[user][district]= highlight_edges(graph_dict[district],list_edges,user,color,district)
+    for district in list_districts:
         plot_mapped(
             graph_dict[district],
             list_edges,
             user,
             district,
+            edge_colors,
             color
         )
-    
-    final_table,previous_table = get_final_stats(user,list_edges,graph_dict,list_districts,stats,date)
-    displayed_stats = plot_stats(final_table,previous_table,list_districts)
-    print(displayed_stats.data.to_string())
+    final_table,previous_table = get_final_stats(user,list_edges,graph_dict,list_districts,stats)
+    styled_table = plot_stats(final_table, previous_table, list_districts)
+    print(styled_table.data.to_string())
