@@ -116,7 +116,7 @@ def get_list_edges(graph, coords_gpx, district, user, start=None):
 
 def load_last_gps_point(district,user):
     try:
-        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txtt"
+        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txtt" #bug with reading previous
         with open(file_list_edges, "r") as f:
             return int(f.read())
     except:
@@ -207,7 +207,10 @@ def get_final_stats(user,list_edges,graph_dict,list_districts,stats):
     date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
     stats_file = "stats-"+user+'_'+date+".csv"
     try:
-        prev_stats_file = sorted(glob.glob('stats-'+user+'_*.csv'))[-1]
+        if os.path.exists(stats_file):
+            prev_stats_file = sorted(glob.glob('stats-'+user+'_*.csv'))[-2]
+        else:
+            prev_stats_file = sorted(glob.glob('stats-'+user+'_*.csv'))[-1]
         df_prev = pd.read_csv(prev_stats_file)
         print("loading previous stats",prev_stats_file)
     except:
