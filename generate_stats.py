@@ -29,8 +29,8 @@ parser.add_argument(
 parser.add_argument(
         "--districts", 
         nargs='+', 
-        default=["Barcelona", "Ciutat Vella", "Eixample", "Sants–Montjuic", "Les Corts", "Sarria-Sant Gervasi", "Gracia", "Horta-Guinardo", "Nou Barris", "Sant Andreu", "Sant Marti"], 
-        help="Specific district name or 'all' to process everything. Default is 'all' ([Barcelona, Ciutat Vella, Eixample, Sants–Montjuic, Les Corts, Sarria-Sant Gervasi, Gracia, Horta-Guinardo, Nou Barris, Sant Andreu, Sant Marti])."
+        default=["Barcelona", "Ciutat_Vella", "Eixample", "Sants_Montjuic", "Les_Corts", "Sarria_Sant_Gervasi", "Gracia", "Horta_Guinardo", "Nou_Barris", "Sant_Andreu", "Sant_Marti"], 
+        help="Specific district name or 'all' to process everything. Default is 'all' ([Barcelona, Ciutat_Vella, Eixample, Sants_Montjuic, Les_Corts, Sarria_Sant_Gervasi, Gracia, Horta_Guinardo, Nou_Barris, Sant_Andreu, Sant_Marti])."
     )
 
 parser.add_argument(
@@ -49,7 +49,7 @@ color = args.color
 print(districts)
 if districts == ["all"]:
    print("from all to list")
-   list_districts = ["Barcelona", "Ciutat Vella", "Eixample", "Sants–Montjuic", "Les Corts", "Sarria-Sant Gervasi", "Gracia", "Horta-Guinardo", "Nou Barris", "Sant Andreu", "Sant Marti"]
+   list_districts = ["Barcelona", "Ciutat_Vella", "Eixample", "Sants_Montjuic", "Les_Corts", "Sarria_Sant_Gervasi", "Gracia", "Horta_Guinardo", "Nou_Barris", "Sant_Andreu", "Sant_Marti"]
 else:
    list_districts = districts    
 if users == "all":

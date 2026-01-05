@@ -99,13 +99,21 @@ def user_view(user: str):
     def get_ratio(d):
         if stats_df is None:
             return 0.0
-        d_clean = d.replace('_', ' ')
-        row = stats_df[stats_df['districts'] == d_clean]
+        print(d)
+       # d_clean = d.replace('_', ' ')
+#        row = stats_df[stats_df['districts'] == d_clean]
+        row = stats_df[stats_df['districts'] == d]
         if row.empty:
             return 0.0
         mapped = row['number of mapped streets'].iloc[0]
         total = row['total number of streets'].iloc[0]
-        return mapped / total if total else 0.0
+        percentage_street = row['percentage street'].iloc[0]
+        print("percentage",percentage_street)
+        total = row['total number of streets'].iloc[0]
+        print("total",total)
+        print("mapped",mapped)
+        return percentage_street if percentage_street else 0.0
+#        return mapped / total if total else 0.0
 
     def set_main(d):
         path = image_path(d)
@@ -115,8 +123,11 @@ def user_view(user: str):
 
             # Update bar height
             ratio = get_ratio(d)
-            bar.style(f'height: {ratio * 100}%')
-            percent_label.set_text(f'{int(ratio * 100)}%')
+            print("ratio",ratio)
+            bar.style(f'height: {ratio}%')
+            percent_label.set_text(f'{int(ratio)}%')
+#            bar.style(f'height: {ratio * 100}%')
+#            percent_label.set_text(f'{int(ratio * 100)}%')
 
             # Print stats in terminal
             # print(f'[{user}] {d}: ratio={ratio:.2f}')
@@ -138,10 +149,13 @@ def user_view(user: str):
 
                 # vertical bar (height proportional to ratio)
                 bar = ui.element('div').classes('bg-blue-500 w-full rounded')
-                bar.style(f'height: {get_ratio(state["districts"]) * 100}%')
+#                bar.style(f'height: {get_ratio(state["districts"]) * 100}%')
+                bar.style(f'height: {get_ratio(state["districts"])}%')
 
                 percent_label = ui.label(
-                    f'{int(get_ratio(state["districts"]) * 100)}%'
+#                    f'{int(get_ratio(state["districts"]) * 100)}%'
+                    f'{int(get_ratio(state["districts"]))}%'
+
                 ).classes('text-xs mt-1 text-center')
 
             # ---- IMAGE COLUMN ----

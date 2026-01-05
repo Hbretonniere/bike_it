@@ -116,7 +116,7 @@ def get_list_edges(graph, coords_gpx, district, user, start=None):
 
 def load_last_gps_point(district,user):
     try:
-        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txt"
+        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txtt"
         with open(file_list_edges, "r") as f:
             return int(f.read())
     except:
@@ -257,17 +257,16 @@ def plot_stats(final_table,previous_table,list_districts):
         new_data = {}
 
         for col in final_table.columns:
-            if col == "districts":
-                continue
-            new_data[col] = final_table[col]
-            display_cols.append(col)
+            if col != "districts":
+                new_data[col] = final_table[col]
+                display_cols.append(col)
         
-            if (diff[col] != 0).any():
-                delta_col_name = "diff "+ col
-                new_data[delta_col_name] = diff[col]
-                display_cols.append(delta_col_name)
+                if (diff[col] != 0).any():
+                    delta_col_name = "diff "+ col
+                    new_data[delta_col_name] = diff[col]
+                    display_cols.append(delta_col_name)
 
-            df_display = pd.DataFrame(new_data, index=final_table.index)[display_cols]
+                df_display = pd.DataFrame(new_data, index=final_table.index)[display_cols]
     else:
         df_display = final_table
         print("no previous")
