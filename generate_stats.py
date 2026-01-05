@@ -78,7 +78,6 @@ for district in list_districts:
     
 list_edges = {}
 edge_colors={}
-edge_colors={}
 
 for user in users:
     coords_date_gpx_pa,date_date_last_pa = get_coords_date_gpx(user)
@@ -98,4 +97,4 @@ for user in users:
         )
     final_table,previous_table = get_final_stats(user,list_edges,graph_dict,list_districts,stats)
     styled_table = plot_stats(final_table, previous_table, list_districts)
-    print(styled_table.data.to_string())
+   # print(styled_table.data.to_string())

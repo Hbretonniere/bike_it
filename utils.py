@@ -169,7 +169,7 @@ def plot_mapped(graph_dict,list_edges,user,district,edge_colors,color):
             bgcolor="w"
         )
     ax.set_title(district+"-"+user)
-    plt.show()
+  #  plt.show()
     fig.savefig("plots/"+user+"/"+district.replace(" ","_")+"-"+user+"."+date+".jpg", dpi=300, bbox_inches='tight')
 
 def get_number_of_mapped_streets(list_edges):
