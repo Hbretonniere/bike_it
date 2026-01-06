@@ -13,7 +13,8 @@ from utils import *
 import osmnx as ox
 import os
 import ast
-import argparse 
+import argparse
+import dataframe_image as dfi
 
 #%matplotlib widget
 
@@ -96,5 +97,18 @@ for user in users:
             color
         )
     final_table,previous_table = get_final_stats(user,list_edges,graph_dict,list_districts,stats)
-    styled_table = plot_stats(final_table, previous_table, list_districts)
-   # print(styled_table.data.to_string())
+    styled_stats = plot_stats(final_table, previous_table, list_districts)
+    dataframe_to_png(styled_stats.data,"stats/"+f"stats-"+user+"-"+date+".png",list_districts)
+    for district in list_districts:
+        table_stats_district = filter_df_for_district(
+            styled_stats.data,
+            list_districts,
+            district
+        )
+
+        dataframe_to_png(
+            table_stats_district,
+            "stats/"+f"stats-"+district+"-"+user+"-"+date+".png",
+            [district]
+        )
+

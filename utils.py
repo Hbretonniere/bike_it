@@ -6,6 +6,7 @@ import osmnx as ox
 import os
 import ast
 import matplotlib.pyplot as plt
+import textwrap
 
 
 def get_graph_stats(graph):
@@ -205,12 +206,12 @@ def get_number_of_streets(graph):
 
 def get_final_stats(user,list_edges,graph_dict,list_districts,stats):
     date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
-    stats_file = "stats-"+user+'_'+date+".csv"
+    stats_file = "stats/stats-"+user+'_'+date+".csv"
     try:
         if os.path.exists(stats_file):
-            prev_stats_file = sorted(glob.glob('stats-'+user+'_*.csv'))[-2]
+            prev_stats_file = sorted(glob.glob('stats/stats-'+user+'_*.csv'))[-2]
         else:
-            prev_stats_file = sorted(glob.glob('stats-'+user+'_*.csv'))[-1]
+            prev_stats_file = sorted(glob.glob('stats/stats-'+user+'_*.csv'))[-1]
         df_prev = pd.read_csv(prev_stats_file)
         print("loading previous stats",prev_stats_file)
     except:
@@ -279,3 +280,70 @@ def plot_stats(final_table,previous_table,list_districts):
         .relabel_index(list_districts, axis=0) \
     .apply(lambda x: ['color: green; font-weight: bold' if 'diff' in x.name else '' 
                       for val in x], axis=0)
+
+
+
+def wrap_header(text, width=14):
+    return "\n".join(textwrap.wrap(text, width=width))
+
+def dataframe_to_png(df, filename, list_districts):
+    df_display = df.copy().reset_index(drop=True)
+    try:
+        df_display.insert(0, "districts", list_districts)
+    except:
+        pass
+
+    col_labels = [wrap_header(c) for c in df_display.columns]
+    cell_text = df_display.round(1).astype(str).values
+
+    n_rows, n_cols = df_display.shape
+
+    fig_width = max(14, n_cols * 1.45)
+    fig_height = max(4, n_rows * 0.45)
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ax.axis("off")
+
+    col_widths = []
+    for col in df_display.columns:
+        if col == "districts":
+            col_widths.append(0.16)
+        elif "diff" in col:
+            col_widths.append(0.10)
+        else:
+            col_widths.append(0.085)
+
+    table = ax.table(
+        cellText=cell_text,
+        colLabels=col_labels,
+        colWidths=col_widths,
+        cellLoc="center",
+        loc="center"
+    )
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.6)
+
+    for (row, col), cell in table.get_celld().items():
+        # Header row
+        if row == 0:
+            cell.set_text_props(weight="bold")
+            cell.set_height(cell.get_height() * 1.8)
+
+        # District names
+        if col == 0 and row > 0:
+            cell.set_text_props(weight="bold")
+            cell.get_text().set_ha("left")
+
+        # Diff columns
+        if "diff" in df_display.columns[col] and row > 0:
+            cell.set_text_props(color="green", weight="bold")
+
+    plt.tight_layout()
+    plt.savefig(filename, dpi=200, bbox_inches="tight")
+    plt.close()
+
+def filter_df_for_district(df, list_districts, district_name):
+    idx = list_districts.index(district_name)
+    return df.iloc[[idx]]
