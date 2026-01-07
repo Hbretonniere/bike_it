@@ -7,6 +7,7 @@ import os
 import ast
 import matplotlib.pyplot as plt
 import textwrap
+from datetime import datetime
 
 
 def get_graph_stats(graph):
@@ -62,10 +63,27 @@ def get_coords_date_gpx(user):
             if (user == 'hubert') & (s in [1, 6]):
                 continue
             for points in segment.points:
-                coords_gpx.append((points.latitude,points.longitude))
+                coords_gpx.append((points.latitude,points.longitude,points.time))
     return coords_gpx, points.time
 
-def get_list_edges(graph, coords_gpx, district, user, start=None):
+def get_coords_dates_gpx(user):
+    file = glob.glob(f'segments/{user}/*.gpx')[0] 
+    gpx_file = open(file, 'r') 
+    gpx = gpxpy.parse(gpx_file) 
+    coords_gpx = []
+    dates_gpx = []
+    for track in gpx.tracks:
+        for s, segment in enumerate(track.segments):
+            if (user == 'hubert') & (s in [1, 6]):
+                continue
+            for points in segment.points:
+                coords_gpx.append((points.latitude,points.longitude))
+                dates_gpx.append(points.time.replace(tzinfo=None))
+    return coords_gpx, points.time, dates_gpx
+
+
+
+def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
     os.makedirs("edges/"+user,exist_ok=True)
     file_list_edges = "edges/"+user+"/list_edges_"+district+"-"+user+".txt"
     list_edges = []
@@ -95,7 +113,9 @@ def get_list_edges(graph, coords_gpx, district, user, start=None):
     gdf_edges = ox.graph_to_gdfs(graph, nodes=False)
 
     with open(file_list_edges, "a") as f:
-        for u, v, k in edges:
+#        for u, v, k in edges:
+        for (u, v, k), edge_date in zip(edges, dates_gpx[idx_start:]):
+
             edge_attributes = gdf_edges.loc[(u, v, k)]
             if type(edge_attributes.get('name')) == str:  
                 street_name = edge_attributes.get('name')
@@ -105,8 +125,8 @@ def get_list_edges(graph, coords_gpx, district, user, start=None):
                 except:
                     street_name = "Unkwown"
             length_edge = float(edge_attributes.get('length'))
-            edge_data = ((u, v, k), street_name, length_edge)
-
+   #         edge_data = ((u, v, k), street_name, length_edge)
+            edge_data = ((u, v, k), street_name, length_edge, edge_date)
             if edge_data not in list_edges:
                 list_edges.append(edge_data)
                 f.write(f"{edge_data}\n")
@@ -130,22 +150,34 @@ def generate_list_edges(graph_dict,user,list_districts):
         print(district)
         last_gps_point = load_last_gps_point(district,user)
         print("last_gps_point",last_gps_point)
-        coords=get_coords_date_gpx(user)[0]
-        list_edges_read[district] = get_list_edges(graph_dict[district],coords,district,user,last_gps_point)
+        coords,_,dates_gpx=get_coords_dates_gpx(user)
+        #coords=get_coords_dates_gpx(user)[0]
+     #   dates_gpx = get_coords_dates_gpx(user)[2]
+        list_edges_read[district] = get_list_edges(graph_dict[district],coords,dates_gpx, district,user,last_gps_point)
+
     return list_edges_read
 
-def highlight_edges(graph,list_edges,user,color,district):
-    highlighted_edges_set={}
-    highlighted_edges_set[user] = {
-        data[0] 
-        for data in list_edges[user][district]
+def highlight_edges(graph,list_edges,user,color,district,date):
+    #highlighted_edges_set={}
+    # highlighted_edges_set[user] = {
+    #     data[0] 
+    #     for data in list_edges[user][district]
+    # }
+    edge_date_map = {
+    data[0]: data[3]   # (u,v,k) → datetime
+    for data in list_edges[user][district]
     }
+    date_limit = datetime.strptime(date, "%Y-%m-%d")
     edge_colors = []
     for u, v, k in graph.edges(keys=True):
         edge_id = (u, v, k)
-    
-        if edge_id in highlighted_edges_set[user]:
-            edge_colors.append(color)
+
+        if edge_id in edge_date_map:
+         #   print(edge_date_map[edge_id],date_limit)
+            if edge_date_map[edge_id] >= date_limit:
+                edge_colors.append("green")
+            else:
+                edge_colors.append(color)
         else:
             edge_colors.append("grey")
     return edge_colors
@@ -153,13 +185,11 @@ def highlight_edges(graph,list_edges,user,color,district):
 #generalize this and the function below to have a way to plot by user and district and loop over this
 
 def plot_mapped(graph_dict,list_edges,user,district,edge_colors,color):
-    try:
-        os.makedirs("plots/"+user)
-    except:
-        pass
+    os.makedirs("plots/"+user,exist_ok=True)
+    os.makedirs("stats/"+user,exist_ok=True)
     date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
     print(district)
-    edge_colors[district]= highlight_edges(graph_dict,list_edges,user,color,district)
+    edge_colors[district]= highlight_edges(graph_dict,list_edges,user,color,district,date)
     fig, ax = ox.plot.plot_graph(
             graph_dict,
             edge_color=edge_colors[user][district],

@@ -86,7 +86,7 @@ for user in users:
     edge_colors[user]={}
     list_edges[user] = generate_list_edges(graph_dict,user,list_districts)
     for district in list_districts:
-        edge_colors[user][district]= highlight_edges(graph_dict[district],list_edges,user,color,district)
+        edge_colors[user][district]= highlight_edges(graph_dict[district],list_edges,user,color,district,date)
     for district in list_districts:
         plot_mapped(
             graph_dict[district],

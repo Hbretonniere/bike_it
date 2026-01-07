@@ -35,6 +35,7 @@ def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
     user_dir = os.path.join(base_dir, user)
     pattern = os.path.join(user_dir, f'{district}-{user}.*.jpg')
     candidates = glob.glob(pattern)
+    print(candidates)
 
     if not candidates:
         return None
@@ -43,7 +44,7 @@ def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
         filename = os.path.basename(path)
         date_str = filename.split('.')[-2]
         return datetime.strptime(date_str, '%Y-%m-%d')
-
+    print(max(candidates, key=extract_date))
     return max(candidates, key=extract_date)
 
 def latest_stats_image(base_dir: str, user: str, district: str) -> str | None:
