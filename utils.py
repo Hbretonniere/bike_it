@@ -126,10 +126,13 @@ def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
                     street_name = "Unkwown"
             length_edge = float(edge_attributes.get('length'))
    #         edge_data = ((u, v, k), street_name, length_edge)
-            edge_data = ((u, v, k), street_name, length_edge, edge_date)
-            if edge_data not in list_edges:
-                list_edges.append(edge_data)
-                f.write(f"{edge_data}\n")
+            edge_key = ((u, v, k), street_name, length_edge)
+
+            if edge_key not in {e[:3] for e in list_edges}:
+                list_edges.append((*edge_key, edge_date.isoformat()))
+                f.write(f"{(*edge_key, edge_date.isoformat())}\n")
+
+
 
     save_last_read_gps_point(get_coords_date_gpx(user)[0], district, user)
     
@@ -163,8 +166,9 @@ def highlight_edges(graph,list_edges,user,color,district,date):
     #     data[0] 
     #     for data in list_edges[user][district]
     # }
+
     edge_date_map = {
-    data[0]: data[3]   # (u,v,k) → datetime
+    data[0]: datetime.fromisoformat(data[3])   # (u,v,k) → datetime
     for data in list_edges[user][district]
     }
     date_limit = datetime.strptime(date, "%Y-%m-%d")
@@ -173,7 +177,7 @@ def highlight_edges(graph,list_edges,user,color,district,date):
         edge_id = (u, v, k)
 
         if edge_id in edge_date_map:
-         #   print(edge_date_map[edge_id],date_limit)
+          #  print(edge_date_map[edge_id],date_limit)
             if edge_date_map[edge_id] >= date_limit:
                 edge_colors.append("green")
             else:
@@ -204,7 +208,7 @@ def plot_mapped(graph_dict,list_edges,user,district,edge_colors,color):
     fig.savefig("plots/"+user+"/"+district.replace(" ","_")+"-"+user+"."+date+".jpg", dpi=300, bbox_inches='tight')
 
 def get_number_of_mapped_streets(list_edges):
-    mapped_street_names = [edge_data for edge_data in list_edges]
+    mapped_street_names = [edge_data[1] for edge_data in list_edges]
     return len(set(mapped_street_names))
 
 def get_number_of_streets(graph):
@@ -259,6 +263,7 @@ def get_final_stats(user,list_edges,graph_dict,list_districts,stats):
         total_street_length = []
 
         for district in list_districts:
+         #   print("len",len(list_edges[user][district]))
             number_of_mapped_streets.append(get_number_of_mapped_streets(list_edges[user][district]))
             total_number_of_streets.append(get_number_of_streets(graph_dict[district]))
             number_of_mapped_segments.append(len(list_edges[user][district]))
