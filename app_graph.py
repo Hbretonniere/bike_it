@@ -47,9 +47,9 @@ def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
 
 def latest_stats_image(base_dir: str, user: str, district: str) -> str | None:
     if district == 'Barcelona':
-        pattern = os.path.join(base_dir,f'stats-{user}-*.png')
+        pattern = os.path.join(base_dir,user,f'stats-{user}-*.png')
     else:
-        pattern = os.path.join(base_dir,f'stats-{district}-{user}-*.png')
+        pattern = os.path.join(base_dir,user,f'stats-{district}-{user}-*.png')
 
     candidates = glob.glob(pattern)
     if not candidates:
@@ -134,11 +134,11 @@ def user_view(user: str):
 
             # Print stats in terminal
             # print(f'[{user}] {d}: ratio={ratio:.2f}')
-            stats_path = latest_stats_image('stats', user, d)
+            stats_path = latest_stats_image('stats/'+user, user, d)
             if stats_image and stats_path:
                 stats_image.set_source(stats_path)
             else:
-                print("no stats image")
+                print("no stats image",stats_path,stats_image)
  
 
     ui.label(user.upper()).classes('text-xl font-bold mb-4')

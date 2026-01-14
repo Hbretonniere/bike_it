@@ -16,7 +16,6 @@ import ast
 import argparse
 import dataframe_image as dfi
 
-#%matplotlib widget
 
 parser = argparse.ArgumentParser()
 
@@ -81,34 +80,55 @@ list_edges = {}
 edge_colors={}
 
 for user in users:
-    coords_date_gpx_pa,date_date_last_pa = get_coords_date_gpx(user)
-    date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
-    edge_colors[user]={}
-    list_edges[user] = generate_list_edges(graph_dict,user,list_districts)
-    for district in list_districts:
-        edge_colors[user][district]= highlight_edges(graph_dict[district],list_edges,user,color,district,date)
-    for district in list_districts:
-        plot_mapped(
-            graph_dict[district],
-            list_edges,
-            user,
-            district,
-            edge_colors,
-            color
-        )
-    final_table,previous_table = get_final_stats(user,list_edges,graph_dict,list_districts,stats)
-    styled_stats = plot_stats(final_table, previous_table, list_districts)
-    dataframe_to_png(styled_stats.data,"stats/"+f"stats-"+user+"-"+date+".png",list_districts)
-    for district in list_districts:
-        table_stats_district = filter_df_for_district(
-            styled_stats.data,
-            list_districts,
-            district
-        )
+    coords, _, dates_gpx = get_coords_dates_gpx(user)
+    
+    unique_days = sorted(list(set(d.strftime("%Y-%m-%d") for d in dates_gpx)))
+    
+    full_history_edges = generate_list_edges(graph_dict, user, list_districts)
+    
+    edge_colors = {user: {}}
 
-        dataframe_to_png(
-            table_stats_district,
-            "stats/"+f"stats-"+district+"-"+user+"-"+date+".png",
-            [district]
-        )
+    for current_date in unique_days:
+        print(f"Processing {user} for {current_date}")
+        if not os.path.isfile("stats/{user}/stats-{user}-{current_date}.png"):
+        
+            list_edges_snapshot = {}
+            for district in list_districts:
+                list_edges_snapshot[district] = [
+                    e for e in full_history_edges[district] 
+                    if e[3].split('T')[0] <= current_date
+                ]
 
+            for district in list_districts:
+                edge_colors[user][district] = highlight_edges(
+                    graph_dict[district], {user: list_edges_snapshot}, user, color, district, current_date
+                )
+                
+                plot_mapped(
+                    graph_dict[district],
+                    {user: list_edges_snapshot},
+                    user,
+                    district,
+                    edge_colors,
+                    color,
+                    current_date
+                )
+
+            final_table, previous_table = get_final_stats(
+                user, {user: list_edges_snapshot}, graph_dict, list_districts, stats, current_date
+            )
+            
+            styled_stats = plot_stats(final_table, previous_table, list_districts)
+            
+            dataframe_to_png(styled_stats.data, f"stats/{user}/stats-{user}-{current_date}.png", list_districts)
+            
+            for district in list_districts:
+                table_stats_district = filter_df_for_district(styled_stats.data, list_districts, district)
+                dataframe_to_png(
+                    table_stats_district,
+                    f"stats/{user}/stats-{district}-{user}-{current_date}.png",
+                    [district]
+                )
+    for district in list_districts:
+        print("Creating gif", user, district)
+        create_gif(district,user)

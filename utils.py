@@ -8,7 +8,7 @@ import ast
 import matplotlib.pyplot as plt
 import textwrap
 from datetime import datetime
-
+from PIL import Image
 
 def get_graph_stats(graph):
     G_proj = ox.projection.project_graph(graph)
@@ -188,12 +188,12 @@ def highlight_edges(graph,list_edges,user,color,district,date):
 
 #generalize this and the function below to have a way to plot by user and district and loop over this
 
-def plot_mapped(graph_dict,list_edges,user,district,edge_colors,color):
-    os.makedirs("plots/"+user,exist_ok=True)
-    os.makedirs("stats/"+user,exist_ok=True)
-    date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
-    print(district)
-    edge_colors[district]= highlight_edges(graph_dict,list_edges,user,color,district,date)
+def plot_mapped(graph_dict, list_edges, user, district, edge_colors, color, date):
+    os.makedirs("plots/"+user, exist_ok=True)
+    os.makedirs("stats/"+user, exist_ok=True)
+    # date is now passed as an argument, no need to call get_coords_date_gpx
+    print(f"Plotting {district} for {date}")
+    
     fig, ax = ox.plot.plot_graph(
             graph_dict,
             edge_color=edge_colors[user][district],
@@ -203,9 +203,9 @@ def plot_mapped(graph_dict,list_edges,user,district,edge_colors,color):
             node_zorder=0,
             bgcolor="w"
         )
-    ax.set_title(district+"-"+user)
-  #  plt.show()
-    fig.savefig("plots/"+user+"/"+district.replace(" ","_")+"-"+user+"."+date+".jpg", dpi=300, bbox_inches='tight')
+    ax.set_title(f"{district} - {user} ({date})")
+    fig.savefig(f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg", dpi=300, bbox_inches='tight')
+    plt.close(fig) # Important to close to save memory
 
 def get_number_of_mapped_streets(list_edges):
     mapped_street_names = [edge_data[1] for edge_data in list_edges]
@@ -238,21 +238,26 @@ def get_number_of_streets(graph):
     #print("Total number of streets",count_unique_names_G)
     return count_unique_names_G
 
-def get_final_stats(user,list_edges,graph_dict,list_districts,stats):
-    date=get_coords_date_gpx(user)[1].strftime("%Y-%m-%d")
-    stats_file = "stats/stats-"+user+'_'+date+".csv"
+def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
+    # date is now passed as an argument
+    stats_file = f"stats/{user}/stats-{user}_{date}.csv"
+    
     try:
-        if os.path.exists(stats_file):
-            prev_stats_file = sorted(glob.glob('stats/stats-'+user+'_*.csv'))[-2]
+        # Find the previous day's file by looking at all CSVs for this user
+        all_prev = sorted(glob.glob(f'stats/{user}/stats-{user}_*.csv'))
+        # If the current file exists, the 'previous' is the one before it
+        if stats_file in all_prev:
+            idx = all_prev.index(stats_file)
+            prev_stats_file = all_prev[idx-1] if idx > 0 else None
         else:
-            prev_stats_file = sorted(glob.glob('stats/stats-'+user+'_*.csv'))[-1]
-        df_prev = pd.read_csv(prev_stats_file)
-        print("loading previous stats",prev_stats_file)
+            prev_stats_file = all_prev[-1] if all_prev else None
+            
+        df_prev = pd.read_csv(prev_stats_file) if prev_stats_file else []
     except:
         df_prev = []
+
     if os.path.exists(stats_file):
         df = pd.read_csv(stats_file)
-        print("reading from current file",stats_file)
     else:
         print("creating new stats file")
         number_of_mapped_streets = []
@@ -382,3 +387,18 @@ def dataframe_to_png(df, filename, list_districts):
 def filter_df_for_district(df, list_districts, district_name):
     idx = list_districts.index(district_name)
     return df.iloc[[idx]]
+
+def create_gif(district, user):
+    images = glob.glob("plots/"+user+"/"+district.replace(' ', '_')+"-"+user+".*.jpg")
+    os.makedirs("gifs/"+user,exist_ok=True)
+    date = images[-1].split(".")[1]
+    img_objects = [Image.open(f) for f in images]
+    gif_name = "gifs/"+user+"/"+district.replace(' ', '_')+"-"+user+"-"+date+".gif"
+    if not os.path.isfile(gif_name):
+       img_objects[0].save(
+            gif_name,
+            save_all=True,
+            append_images=img_objects[1:],
+            duration=1000, 
+            loop=0
+        )
