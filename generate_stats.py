@@ -90,7 +90,7 @@ for user in users:
 
     for current_date in unique_days:
         print(f"Processing {user} for {current_date}")
-        if not os.path.isfile("stats/{user}/stats-{user}-{current_date}.png"):
+        if not os.path.exists("stats/"+user+"/stats-Barcelona-"+user+"-"+current_date+".png"):
         
             list_edges_snapshot = {}
             for district in list_districts:
@@ -113,6 +113,7 @@ for user in users:
                     color,
                     current_date
                 )
+
 
             final_table, previous_table = get_final_stats(
                 user, {user: list_edges_snapshot}, graph_dict, list_districts, stats, current_date

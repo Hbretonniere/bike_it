@@ -305,7 +305,7 @@ def plot_stats(final_table,previous_table,list_districts):
                 new_data[col] = final_table[col]
                 display_cols.append(col)
         
-                if (diff[col] != 0).any():
+                if (diff[col] != 0).any() and col != "total street length":
                     delta_col_name = "diff "+ col
                     new_data[delta_col_name] = diff[col]
                     display_cols.append(delta_col_name)
@@ -389,7 +389,7 @@ def filter_df_for_district(df, list_districts, district_name):
     return df.iloc[[idx]]
 
 def create_gif(district, user):
-    images = glob.glob("plots/"+user+"/"+district.replace(' ', '_')+"-"+user+".*.jpg")
+    images = sorted(glob.glob("plots/"+user+"/"+district.replace(' ', '_')+"-"+user+".*.jpg"))
     os.makedirs("gifs/"+user,exist_ok=True)
     date = images[-1].split(".")[1]
     img_objects = [Image.open(f) for f in images]
@@ -399,6 +399,6 @@ def create_gif(district, user):
             gif_name,
             save_all=True,
             append_images=img_objects[1:],
-            duration=1000, 
+            duration=700, 
             loop=0
         )

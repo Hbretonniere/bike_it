@@ -15,7 +15,7 @@ USERS = ['hubert', 'pa']
 
 
 def latest_stats_df(base_dir: str, user: str) -> pd.DataFrame | None:
-    pattern = os.path.join("stats",f'stats-{user}_*.csv')
+    pattern = os.path.join("stats",user,f'stats-{user}_*.csv')
 
     candidates = glob.glob(pattern)
     # print(candidates)
