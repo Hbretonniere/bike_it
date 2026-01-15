@@ -4,6 +4,8 @@ import gpxpy
 import glob
 import gpxpy.gpx
 from shapely.geometry import LineString
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
 import contextily as ctx
@@ -78,6 +80,7 @@ for district in list_districts:
     
 list_edges = {}
 edge_colors={}
+edge_widths = {}
 
 for user in users:
     coords, _, dates_gpx = get_coords_dates_gpx(user)
@@ -87,7 +90,7 @@ for user in users:
     full_history_edges = generate_list_edges(graph_dict, user, list_districts)
     
     edge_colors = {user: {}}
-
+    edge_widths = {user: {}}
     for current_date in unique_days:
         print(f"Processing {user} for {current_date}")
         if not os.path.exists("stats/"+user+"/stats-Barcelona-"+user+"-"+current_date+".png"):
@@ -100,7 +103,7 @@ for user in users:
                 ]
 
             for district in list_districts:
-                edge_colors[user][district] = highlight_edges(
+                edge_colors[user][district],edge_widths[user][district] = highlight_edges(
                     graph_dict[district], {user: list_edges_snapshot}, user, color, district, current_date
                 )
                 
@@ -110,6 +113,7 @@ for user in users:
                     user,
                     district,
                     edge_colors,
+                    edge_widths,
                     color,
                     current_date
                 )

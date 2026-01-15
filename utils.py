@@ -5,6 +5,8 @@ import numpy as np
 import osmnx as ox
 import os
 import ast
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import textwrap
 from datetime import datetime
@@ -17,35 +19,6 @@ def get_graph_stats(graph):
     graph_area_m = nodes_proj.union_all().convex_hull.area
     stats = ox.stats.basic_stats(G_proj, area=graph_area_m, clean_int_tol=15)
     return stats
-
-def get_all_edge_data(graph, coords_list):
-
-    lats = [c[0] for c in coords_list]
-    lons = [c[1] for c in coords_list]
-
-    u_ids, v_ids, keys = ox.nearest_edges(graph, X=lons, Y=lats)
-
-    gdf_edges = ox.graph_to_gdfs(graph, nodes=False, fill_edge_geometry=False)
-
-    results = []
-    
-    for u, v, k in zip(u_ids, v_ids, keys):
-        edge_data = gdf_edges.loc[(u, v, k)]
-        
-        if type(edge_attributes.get('name')) == str:  
-            street_name = edge_attributes.get('name') #usually a string
-        else:
-            try:
-                street_name = edge_attributes.get('name')[0] #edge with coords (41.4049091 2.1738864), (41.4052928 2.1755545) has Provenca and Marina
-            except:
-                street_name = "Unkwown" # edge from point 867 or 868 from PA has no street name
-    #print(type(street_name),street_name)
-        
-        length = edge_data.get('length', 0)
-        
-        results.append(((u, v, k), street_name, length))
-        
-    return results
 
 def save_last_read_gps_point(i,district,user):
     os.makedirs("edges/"+user,exist_ok=True)
@@ -89,13 +62,11 @@ def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
     list_edges = []
     
     if start and os.path.isfile(file_list_edges):
-        print("Reading from previous list of edges")
         with open(file_list_edges, "r") as f:
             for line in f:
                 if line.strip():
                     list_edges.append(ast.literal_eval(line))
     else:
-        print("Starting new list of edges")
         with open(file_list_edges, "w") as f:
             pass 
 
@@ -113,7 +84,6 @@ def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
     gdf_edges = ox.graph_to_gdfs(graph, nodes=False)
 
     with open(file_list_edges, "a") as f:
-#        for u, v, k in edges:
         for (u, v, k), edge_date in zip(edges, dates_gpx[idx_start:]):
 
             edge_attributes = gdf_edges.loc[(u, v, k)]
@@ -125,17 +95,13 @@ def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
                 except:
                     street_name = "Unkwown"
             length_edge = float(edge_attributes.get('length'))
-   #         edge_data = ((u, v, k), street_name, length_edge)
             edge_key = ((u, v, k), street_name, length_edge)
 
             if edge_key not in {e[:3] for e in list_edges}:
                 list_edges.append((*edge_key, edge_date.isoformat()))
                 f.write(f"{(*edge_key, edge_date.isoformat())}\n")
 
-
-
     save_last_read_gps_point(get_coords_date_gpx(user)[0], district, user)
-    
     return list_edges
 
 def load_last_gps_point(district,user):
@@ -150,62 +116,53 @@ def load_last_gps_point(district,user):
 def generate_list_edges(graph_dict,user,list_districts):
     list_edges_read={}
     for district in list_districts:
-        print(district)
+        print("Generating list edges",district, user)
         last_gps_point = load_last_gps_point(district,user)
-        print("last_gps_point",last_gps_point)
         coords,_,dates_gpx=get_coords_dates_gpx(user)
-        #coords=get_coords_dates_gpx(user)[0]
-     #   dates_gpx = get_coords_dates_gpx(user)[2]
         list_edges_read[district] = get_list_edges(graph_dict[district],coords,dates_gpx, district,user,last_gps_point)
 
     return list_edges_read
 
 def highlight_edges(graph,list_edges,user,color,district,date):
-    #highlighted_edges_set={}
-    # highlighted_edges_set[user] = {
-    #     data[0] 
-    #     for data in list_edges[user][district]
-    # }
-
     edge_date_map = {
-    data[0]: datetime.fromisoformat(data[3])   # (u,v,k) → datetime
+    data[0]: datetime.fromisoformat(data[3])
     for data in list_edges[user][district]
     }
     date_limit = datetime.strptime(date, "%Y-%m-%d")
     edge_colors = []
+    edge_widths = []
     for u, v, k in graph.edges(keys=True):
         edge_id = (u, v, k)
 
         if edge_id in edge_date_map:
-          #  print(edge_date_map[edge_id],date_limit)
             if edge_date_map[edge_id] >= date_limit:
                 edge_colors.append("green")
             else:
                 edge_colors.append(color)
+            edge_widths.append(1)
         else:
             edge_colors.append("grey")
-    return edge_colors
+            edge_widths.append(0.5)
+    return edge_colors, edge_widths
 
-#generalize this and the function below to have a way to plot by user and district and loop over this
 
-def plot_mapped(graph_dict, list_edges, user, district, edge_colors, color, date):
+def plot_mapped(graph_dict, list_edges, user, district, edge_colors, edge_widths, color, date):
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
-    # date is now passed as an argument, no need to call get_coords_date_gpx
     print(f"Plotting {district} for {date}")
     
     fig, ax = ox.plot.plot_graph(
             graph_dict,
             edge_color=edge_colors[user][district],
-            edge_linewidth=1.5,
+            edge_linewidth=edge_widths[user][district],
             show=False,
-            close=False,
+            close=True,
             node_zorder=0,
             bgcolor="w"
         )
     ax.set_title(f"{district} - {user} ({date})")
-    fig.savefig(f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg", dpi=300, bbox_inches='tight')
-    plt.close(fig) # Important to close to save memory
+    fig.savefig(f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg", dpi=500, bbox_inches='tight')
+    plt.close(fig) 
 
 def get_number_of_mapped_streets(list_edges):
     mapped_street_names = [edge_data[1] for edge_data in list_edges]
@@ -216,8 +173,6 @@ def get_number_of_streets(graph):
     unique_street_names_from_G = set()
 
 # Iterate over all edges in the graph, retrieving the attribute data for each edge
-# We use keys=False because the u, v, k are not strictly needed for this task,
-# only the data dictionary is.
     for _, _, data in graph.edges(data=True):
     # The street name is stored under the key 'name'
         name_entry = data.get('name')
@@ -239,9 +194,7 @@ def get_number_of_streets(graph):
     return count_unique_names_G
 
 def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
-    # date is now passed as an argument
     stats_file = f"stats/{user}/stats-{user}_{date}.csv"
-    
     try:
         # Find the previous day's file by looking at all CSVs for this user
         all_prev = sorted(glob.glob(f'stats/{user}/stats-{user}_*.csv'))
@@ -259,7 +212,6 @@ def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
     if os.path.exists(stats_file):
         df = pd.read_csv(stats_file)
     else:
-        print("creating new stats file")
         number_of_mapped_streets = []
         total_number_of_streets = []
         number_of_mapped_segments = []
@@ -268,7 +220,6 @@ def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
         total_street_length = []
 
         for district in list_districts:
-         #   print("len",len(list_edges[user][district]))
             number_of_mapped_streets.append(get_number_of_mapped_streets(list_edges[user][district]))
             total_number_of_streets.append(get_number_of_streets(graph_dict[district]))
             number_of_mapped_segments.append(len(list_edges[user][district]))
@@ -288,13 +239,11 @@ def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
             "total street length": total_street_length,
             "percentage km": np.array(mapped_kms)/np.array(total_street_length)*100
         })
-    #    df.set_index('districts')
         df.to_csv(stats_file,index=False)
     return df,df_prev
     
 def plot_stats(final_table,previous_table,list_districts):
     if isinstance(previous_table, pd.DataFrame) and not previous_table.empty:
-        print("previous")
         diff = final_table.set_index("districts").subtract(previous_table.set_index("districts"), fill_value=0).abs()
         diff = diff.reset_index()
         display_cols = []
@@ -313,7 +262,6 @@ def plot_stats(final_table,previous_table,list_districts):
                 df_display = pd.DataFrame(new_data, index=final_table.index)[display_cols]
     else:
         df_display = final_table
-        print("no previous")
     return df_display.style \
         .format(precision=1) \
         .format_index(str.upper, axis=0) \
@@ -393,12 +341,13 @@ def create_gif(district, user):
     os.makedirs("gifs/"+user,exist_ok=True)
     date = images[-1].split(".")[1]
     img_objects = [Image.open(f) for f in images]
-    gif_name = "gifs/"+user+"/"+district.replace(' ', '_')+"-"+user+"-"+date+".gif"
-    if not os.path.isfile(gif_name):
-       img_objects[0].save(
+    gif_name = "gifs/"+user+"/"+district.replace(' ', '_')+"-"+user+".gif"
+    img_objects[0].save(
             gif_name,
             save_all=True,
             append_images=img_objects[1:],
             duration=700, 
-            loop=0
-        )
+            loop=1
+    )
+    for img in img_objects:
+        img.close()
