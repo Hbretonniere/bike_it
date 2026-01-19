@@ -11,14 +11,25 @@ import matplotlib.pyplot as plt
 import textwrap
 from datetime import datetime
 from PIL import Image
+import json
 
-def get_graph_stats(graph):
-    G_proj = ox.projection.project_graph(graph)
-    nodes_proj = ox.convert.graph_to_gdfs(G_proj, edges=False)
-    graph_area_m = nodes_proj.union_all().convex_hull.area
-    graph_area_m = nodes_proj.union_all().convex_hull.area
-    stats = ox.stats.basic_stats(G_proj, area=graph_area_m, clean_int_tol=15)
-    return stats
+def get_graph_stats(graph,district):
+    stats_district = district+".json"
+    if os.path.exists(stats_district):
+        print("Load stats from file")
+        with open(stats_district, "r") as f:
+            return json.load(f)
+    else:
+        print("Compute stats")
+        G_proj = ox.projection.project_graph(graph)
+        nodes_proj = ox.convert.graph_to_gdfs(G_proj, edges=False)
+        graph_area_m = nodes_proj.union_all().convex_hull.area
+        graph_area_m = nodes_proj.union_all().convex_hull.area
+        stats = ox.stats.basic_stats(G_proj, area=graph_area_m, clean_int_tol=15)
+        with open(stats_district, "w") as f:
+           json.dump(stats, f, indent=2)
+    
+        return stats
 
 def save_last_read_gps_point(i,district,user):
     os.makedirs("edges/"+user,exist_ok=True)
@@ -338,16 +349,41 @@ def filter_df_for_district(df, list_districts, district_name):
 
 def create_gif(district, user):
     images = sorted(glob.glob("plots/"+user+"/"+district.replace(' ', '_')+"-"+user+".*.jpg"))
-    os.makedirs("gifs/"+user,exist_ok=True)
-    date = images[-1].split(".")[1]
+    district_clean = district.replace(" ", "_")
+    gif_dir = "gifs/"+user
+    gif_name = gif_dir+"/"+district_clean+"-"+user+".gif"
+    os.makedirs(gif_dir,exist_ok=True)
+    list_processed = f"{gif_dir}/{district_clean}-{user}.json"
+    if os.path.exists(list_processed):
+        with open(list_processed, "r") as f:
+            processed_images = json.load(f)
+    else:
+        processed_images = []
+
+    new_images = [img for img in images if img not in processed_images]
+    new_img_objects = [Image.open(f) for f in new_images]
+    if os.path.exists(gif_name):
+        existing = Image.open(gif_name)
+        existing.save(
+                gif_name,
+                save_all=True,
+                append_images=new_img_objects,
+                duration=700,
+                loop=1
+        )
+    else:
+        new_img_objects[0].save(
+                gif_name,
+                save_all=True,
+                append_images=new_img_objects[1:],
+                duration=700,
+                loop=1
+        )
+
+    with open(list_processed, "w") as f:
+        json.dump(processed_images + new_images, f, indent=2)
+    
     img_objects = [Image.open(f) for f in images]
-    gif_name = "gifs/"+user+"/"+district.replace(' ', '_')+"-"+user+".gif"
-    img_objects[0].save(
-            gif_name,
-            save_all=True,
-            append_images=img_objects[1:],
-            duration=700, 
-            loop=1
-    )
+    
     for img in img_objects:
         img.close()

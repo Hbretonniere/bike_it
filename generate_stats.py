@@ -76,7 +76,7 @@ print("All graphs loaded")
 stats={}
 for district in list_districts:
     print("Computing stats for", district)
-    stats[district]=get_graph_stats(graph_dict[district])
+    stats[district]=get_graph_stats(graph_dict[district],district)
     
 list_edges = {}
 edge_colors={}
