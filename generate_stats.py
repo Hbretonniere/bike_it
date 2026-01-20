@@ -65,7 +65,7 @@ for district in list_districts:
     filepath = "graphs/"+district+"-"+graph_type+".graphml"
     if not os.path.isfile(filepath):
         print("Downloading ",district,"from Internet")
-        graph = ox.graph.graph_from_place(district + " ,Barcelona, Spain", network_type=graph_type)
+        graph = ox.convert.to_undirected(ox.graph.graph_from_place(district + " ,Barcelona, Spain", network_type=graph_type))
         ox.save_graphml(G=graph,filepath=filepath)
     else:
         print("Loading",district," from file")
