@@ -165,7 +165,7 @@ def plot_mapped(graph_dict, list_edges, user, district, edge_colors, edge_widths
     fig, ax = ox.plot.plot_graph(
             graph_dict,
             edge_color=edge_colors[user][district],
-            edge_linewidth=edge_widths[user][district],
+            edge_linewidth=0.5, #edge_widths[user][district],
             show=False,
             close=True,
             node_zorder=0,
