@@ -33,17 +33,23 @@ def latest_stats_df(base_dir: str, user: str) -> pd.DataFrame | None:
 
 def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
     user_dir = os.path.join(base_dir, user)
-    pattern = os.path.join(user_dir, f'{district}-{user}.*.jpg')
+    pattern = os.path.join(user_dir, f'{district}-{user}*.jpg')
     candidates = glob.glob(pattern)
-
-    if not candidates:
-        return None
-
+    
     def extract_date(path):
         filename = os.path.basename(path)
         date_str = filename.split('.')[-2]
         return datetime.strptime(date_str, '%Y-%m-%d')
-    return max(candidates, key=extract_date)
+    
+    if not candidates:
+        return None
+    else:
+        if len(candidates) == 1:
+            latest_picture = candidates[0]
+        else:
+            latest_picture = max(candidates, key=extract_date)
+
+    return latest_picture
 
 def latest_stats_image(base_dir: str, user: str, district: str) -> str | None:
     if district == 'Barcelona':

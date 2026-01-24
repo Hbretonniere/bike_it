@@ -179,9 +179,12 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             Line2D([0], [0], color='green', lw=2, label='PA only'),
         ]
         ax.legend(handles=legend_elements, loc='lower right')
+        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.jpg"
+    else:
+        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg"
 
     ax.set_title(f"{district} - {user} ({date})")
-    fig.savefig(f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg", dpi=500, bbox_inches='tight')
+    fig.savefig(plot_name, dpi=500, bbox_inches='tight')
     plt.close(fig) 
 
 def get_number_of_mapped_streets(list_edges):
