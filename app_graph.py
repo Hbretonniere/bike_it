@@ -245,7 +245,6 @@ def user_view(user: str):
 # --------------------------------------------------
 
 def comparison_view(users=('hubert', 'pa')):
-
     # find common districts
     districts = [set(get_user_districts(u)) for u in users]
     common_districts = sorted(set.intersection(*districts))
@@ -257,7 +256,6 @@ def comparison_view(users=('hubert', 'pa')):
     state = {'districts': common_districts[0]}
     main_images = {}
 
-    # load stats once per user
     stats = {u: latest_stats_df('.', u) for u in users}
 
     def get_ratio(user, district):
@@ -270,74 +268,54 @@ def comparison_view(users=('hubert', 'pa')):
             return 0.0
         return row['percentage street'].iloc[0] or 0.0
 
-    ui.label('Comparison').classes('text-xl font-bold text-center mb-4')
+
+    with ui.row().classes('w-full justify-center mb-8'):
+        path_comp = latest_image_path(BASE_DIR, 'comparison', state['districts'])
+        main_images['comparison'] = ui.image(path_comp).classes(
+            'w-[50vw] max-w-[800px] '
+        )
 
     # ── GRID: Left Image | Bars | Right Image ──
     with ui.element('div').classes(
         'grid grid-cols-[1fr_80px_1fr] items-end gap-6 w-full justify-center'
     ):
 
-        # ── LEFT IMAGE ──
+        # ── LEFT IMAGE (User 1) ──
         with ui.column().classes('items-center'):
             user = users[0]
             ui.label(user.upper()).classes('text-lg font-bold mb-2')
-
             path = latest_image_path(BASE_DIR, user, state['districts'])
-            main_images[user] = ui.image(path).classes(
-                'w-[30vw] max-w-[30vw]'
-            )
+            main_images[user] = ui.image(path).classes('w-[30vw] max-w-[30vw]')
 
         # ── BARS (CENTER) ──
-        with ui.element('div').classes(
-            'grid grid-cols-2 gap-4 items-end h-full'
-        ):
+        with ui.element('div').classes('grid grid-cols-2 gap-4 items-end h-full'):
             bars = {}
-
             for user, color in zip(users, ['bg-blue-400', 'bg-red-400']):
                 with ui.column().classes('items-center justify-end h-full'):
-                    # Bar element
-                    bar = ui.element('div').classes(
-                        f'{color} w-full rounded transition-all duration-300'
-                    )
+                    bar = ui.element('div').classes(f'{color} w-full rounded transition-all duration-300')
                     bar.style(f'height: {get_ratio(user, state["districts"])}%')
-
-                    # Percentage label below bar
-                    percent_label = ui.label(
-                        f'{int(get_ratio(user, state["districts"]))}%'
-                    ).classes('text-xs mt-1')
-
-                    # User label below percentage
-                    ui.label(user.upper()).classes(
-                        'text-xs font-semibold mt-1'
-                    )
-
-                    # store both bar and label for updates
+                    percent_label = ui.label(f'{int(get_ratio(user, state["districts"]))}%').classes('text-xs mt-1')
+                    ui.label(user.upper()).classes('text-xs font-semibold mt-1')
                     bars[user] = {'bar': bar, 'label': percent_label}
 
-        # ── RIGHT IMAGE ──
+        # ── RIGHT IMAGE (User 2) ──
         with ui.column().classes('items-center'):
             user = users[1]
             ui.label(user.upper()).classes('text-lg font-bold mb-2')
-
             path = latest_image_path(BASE_DIR, user, state['districts'])
-            main_images[user] = ui.image(path).classes(
-                'w-[30vw] max-w-[30vw]'
-            )
+            main_images[user] = ui.image(path).classes('w-[30vw] max-w-[30vw]')
 
     ui.separator().classes('my-4')
 
     # ── DISTRICT SELECTOR ──
-    ui.label('Select district').classes('text-center mb-2')
-
+    ui.label('Select district').classes('text-center mb-2 font-semibold')
     with ui.row().classes('gap-4 justify-center'):
         for d in common_districts:
-            ui.button(d).on('click', lambda d=d: set_district(d))
+            ui.button(d.replace('_', ' '), on_click=lambda d=d: set_district(d)).classes('px-4')
 
     # ── UPDATE FUNCTION ──
     def set_district(d):
         state['districts'] = d
-
-        # update images
         for user, img in main_images.items():
             path = latest_image_path(BASE_DIR, user, d)
             if path:
@@ -348,8 +326,6 @@ def comparison_view(users=('hubert', 'pa')):
             ratio = get_ratio(user, d)
             bars[user]['bar'].style(f'height: {ratio}%')
             bars[user]['label'].set_text(f'{int(ratio)}%')
-
-
 # --------------------------------------------------
 # Main page (tabs)
 # --------------------------------------------------

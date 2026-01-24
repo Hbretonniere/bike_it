@@ -12,6 +12,7 @@ import textwrap
 from datetime import datetime
 from PIL import Image
 import json
+from matplotlib.lines import Line2D
 
 def get_graph_stats(graph,district):
     stats_district = district+".json"
@@ -157,20 +158,28 @@ def highlight_edges(graph,list_edges,user,color,district,date):
     return edge_colors, edge_widths
 
 
-def plot_mapped(graph_dict, list_edges, user, district, edge_colors, edge_widths, color, date):
+def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date):
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
     print(f"Plotting {district} for {date}")
     
     fig, ax = ox.plot.plot_graph(
             graph_dict,
-            edge_color=edge_colors[user][district],
+            edge_color=edge_colors,#[user][district],
             edge_linewidth=0.5, #edge_widths[user][district],
             show=False,
             close=True,
             node_zorder=0,
             bgcolor="w"
         )
+    if user == "comparison":
+        legend_elements = [
+            Line2D([0], [0], color='red', lw=2, label='Both'),
+            Line2D([0], [0], color='blue', lw=2, label='Hubert only'),
+            Line2D([0], [0], color='green', lw=2, label='PA only'),
+        ]
+        ax.legend(handles=legend_elements, loc='lower right')
+
     ax.set_title(f"{district} - {user} ({date})")
     fig.savefig(f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg", dpi=500, bbox_inches='tight')
     plt.close(fig) 
@@ -280,8 +289,6 @@ def plot_stats(final_table,previous_table,list_districts):
     .apply(lambda x: ['color: green; font-weight: bold' if 'diff' in x.name else '' 
                       for val in x], axis=0)
 
-
-
 def wrap_header(text, width=14):
     return "\n".join(textwrap.wrap(text, width=width))
 
@@ -387,3 +394,18 @@ def create_gif(district, user):
     
     for img in img_objects:
         img.close()
+
+def merge_edges(edge_colors_pa,edge_colors_hubert):
+    merged_colors = []
+    for i in range(len(edge_colors_hubert)):
+        if edge_colors_hubert[i] == "red":
+            if edge_colors_pa[i] == "red":
+                merged_colors.append("red") #mapped by both
+            else:
+                merged_colors.append("blue") #mapped by Hubert only
+        else:
+            if edge_colors_pa[i] == "red":
+                merged_colors.append("green") #mapped by PA only
+            else:
+                merged_colors.append("grey") #mapped by Hubert none
+    return merged_colors
