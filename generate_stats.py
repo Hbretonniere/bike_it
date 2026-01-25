@@ -93,35 +93,37 @@ for user in users:
             edge_colors[user][district] = colors
             edge_widths[user][district] = widths
 
-        stats_check_file = f"stats/{user}/stats-{user}-{current_date}.png"
-        if not os.path.exists(stats_check_file):
-            for district in list_districts:
-                plot_mapped(
-                    graph_dict[district],
-                    user,
-                    district,
-                    edge_colors[user][district],
-                    edge_widths[user][district],
-                    color,
-                    current_date
-                )
+        stats_check_file = f"stats/{user}/stats-{user}.jpg"
+        #if not os.path.exists(stats_check_file):
+        for district in list_districts:
+            plot_mapped(
+                graph_dict[district],
+                user,
+                district,
+                edge_colors[user][district],
+                edge_widths[user][district],
+                color,
+                current_date
+            )
 
-            if current_date == last_day:
-                final_table, previous_table = get_final_stats(
-                    user, {user: list_edges_snapshot}, graph_dict, list_districts, stats, current_date
+        
+        final_table, previous_table = get_final_stats(
+                user, {user: list_edges_snapshot}, graph_dict, list_districts, stats, current_date
+        )
+        
+        styled_stats = plot_stats(final_table, previous_table, list_districts)
+        if current_date == last_day:
+            dataframe_to_jpg(styled_stats.data, stats_check_file, list_districts)
+        
+            for district in list_districts:
+                table_stats_district = filter_df_for_district(styled_stats.data, list_districts, district)
+                print("plotting stats",current_date,district,user)
+                dataframe_to_jpg(
+                    table_stats_district,
+                    f"stats/{user}/stats-{district}-{user}.jpg",
+                    [district]
                 )
-            
-                styled_stats = plot_stats(final_table, previous_table, list_districts)
-                dataframe_to_png(styled_stats.data, stats_check_file, list_districts)
-            
-                for district in list_districts:
-                    table_stats_district = filter_df_for_district(styled_stats.data, list_districts, district)
-                    dataframe_to_png(
-                        table_stats_district,
-                        f"stats/{user}/stats-{district}-{user}-{current_date}.png",
-                        [district]
-                    )
-                    create_gif(district, user)
+                create_gif(district, user)
 
 for district in list_districts:
     merged_colors = merge_edges(edge_colors["pa"][district], edge_colors["hubert"][district])

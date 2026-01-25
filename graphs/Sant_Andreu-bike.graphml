@@ -27,7 +27,7 @@
 <key id="d2" for="graph" attr.name="crs" attr.type="string"/>
 <key id="d1" for="graph" attr.name="created_with" attr.type="string"/>
 <key id="d0" for="graph" attr.name="created_date" attr.type="string"/>
-<graph edgedefault="undirected"><data key="d0">2026-01-20 21:27:32</data>
+<graph edgedefault="undirected"><data key="d0">2026-01-25 20:27:00</data>
 <data key="d1">OSMnx 2.0.7</data>
 <data key="d2">epsg:4326</data>
 <data key="d3">True</data>
@@ -7722,8 +7722,8 @@
 <edge source="30243449" target="10926004932" id="0">
   <data key="d10">[885702980, 284579037]</data>
   <data key="d11">tertiary</data>
-  <data key="d12">['4', '2']</data>
-  <data key="d13">['50', '30']</data>
+  <data key="d12">['2', '4']</data>
+  <data key="d13">['30', '50']</data>
   <data key="d14">Carrer de Mallorca</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -8647,7 +8647,7 @@
 </edge>
 <edge source="30295490" target="1312339723" id="0">
   <data key="d10">[971410021, 116405727]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Cervera</data>
   <data key="d15">True</data>
@@ -9161,7 +9161,7 @@
 </edge>
 <edge source="30295549" target="598224644" id="0">
   <data key="d10">[52516530, 971410027]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer d'Ignasi Iglésias</data>
@@ -9361,7 +9361,7 @@
 </edge>
 <edge source="30295713" target="2432714390" id="0">
   <data key="d10">[4750378, 898111947]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Sant Hipòlit</data>
@@ -9438,7 +9438,7 @@
 </edge>
 <edge source="30295716" target="598224964" id="0">
   <data key="d10">[1023455588, 46838053]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Malats</data>
@@ -9642,7 +9642,7 @@
 </edge>
 <edge source="30295810" target="2687171804" id="0">
   <data key="d10">[263092723, 263092724]</data>
-  <data key="d11">['residential', 'pedestrian']</data>
+  <data key="d11">['pedestrian', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
   <data key="d14">Carrer de Recesvint</data>
@@ -10057,7 +10057,7 @@
 </edge>
 <edge source="30296789" target="1857472173" id="0">
   <data key="d10">[914512370, 553789946, 434819443]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer del Turó de la Trinitat</data>
@@ -10294,7 +10294,7 @@
   <data key="d10">[46837731, 544414485]</data>
   <data key="d11">residential</data>
   <data key="d12">2</data>
-  <data key="d13">['50', '30']</data>
+  <data key="d13">['30', '50']</data>
   <data key="d14">Carrer de la Ciutat d'Asunción</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -10460,7 +10460,7 @@
   <data key="d10">[441345232, 4750514]</data>
   <data key="d11">living_street</data>
   <data key="d12">1</data>
-  <data key="d13">['10', '20']</data>
+  <data key="d13">['20', '10']</data>
   <data key="d14">Carrer del Barri Vermell</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -10888,7 +10888,7 @@
 </edge>
 <edge source="30332598" target="434437196" id="0">
   <data key="d10">[884461757, 279897678]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Sant Antoni Maria Claret</data>
   <data key="d15">True</data>
@@ -11138,7 +11138,7 @@
   <data key="d10">[544614099, 1092586014]</data>
   <data key="d11">tertiary</data>
   <data key="d12">3</data>
-  <data key="d13">['50', '30']</data>
+  <data key="d13">['30', '50']</data>
   <data key="d14">Carrer de Sant Antoni Maria Claret</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -11673,7 +11673,7 @@
 </edge>
 <edge source="30618078" target="6203603463" id="0">
   <data key="d10">[893125269, 29042063]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Sant Ildefons</data>
@@ -11686,7 +11686,7 @@
 </edge>
 <edge source="30618089" target="6203603470" id="0">
   <data key="d10">[116405729, 1019853380]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d13">30</data>
   <data key="d14">Carrer de la Vall d'Aran</data>
   <data key="d15">True</data>
@@ -11884,7 +11884,7 @@
 <edge source="30618097" target="3871616985" id="0">
   <data key="d10">[544407144, 1451100841, 1409683690, 1409683691]</data>
   <data key="d11">secondary</data>
-  <data key="d12">['4', '3', '2']</data>
+  <data key="d12">['2', '4', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Carrer de Ferran Junoy</data>
   <data key="d15">True</data>
@@ -12232,7 +12232,7 @@
   <data key="d11">residential</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
-  <data key="d14">['Carrer de Novelles', 'Passeig de Mollerussa']</data>
+  <data key="d14">['Passeig de Mollerussa', 'Carrer de Novelles']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">179.41838587563186</data>
@@ -14223,7 +14223,7 @@
   <data key="d10">[727309201, 727309203]</data>
   <data key="d11">tertiary</data>
   <data key="d27">circular</data>
-  <data key="d12">['3', '2']</data>
+  <data key="d12">['2', '3']</data>
   <data key="d13">30</data>
   <data key="d14">Plaça de Monterrey</data>
   <data key="d15">True</data>
@@ -14773,7 +14773,7 @@
 </edge>
 <edge source="420763042" target="1043849998" id="0">
   <data key="d10">[884223566, 195553382]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de l'Espiga</data>
   <data key="d15">True</data>
@@ -15047,8 +15047,8 @@
 <edge source="421265634" target="423434715" id="0">
   <data key="d10">[37288866, 37288867]</data>
   <data key="d11">residential</data>
-  <data key="d13">['50', '30']</data>
-  <data key="d14">['Carrer de les Antilles', 'Avinguda Meridiana']</data>
+  <data key="d13">['30', '50']</data>
+  <data key="d14">['Avinguda Meridiana', 'Carrer de les Antilles']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">121.32735404822088</data>
@@ -15222,7 +15222,7 @@
 <edge source="423434652" target="3114962601" id="0">
   <data key="d10">[36294746, 1005074074]</data>
   <data key="d11">living_street</data>
-  <data key="d13">['10', '20']</data>
+  <data key="d13">['20', '10']</data>
   <data key="d14">Carrer de Coll</data>
   <data key="d15">True</data>
   <data key="d22">3</data>
@@ -15287,7 +15287,7 @@
 <edge source="423434655" target="423434738" id="0">
   <data key="d10">[971480432, 36294748, 1219280693]</data>
   <data key="d11">['residential', 'living_street']</data>
-  <data key="d13">['10', '30', '20']</data>
+  <data key="d13">['30', '20', '10']</data>
   <data key="d14">Carrer de les Açores</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -15417,7 +15417,7 @@
   <data key="d10">[281178165, 281178166]</data>
   <data key="d24">yes</data>
   <data key="d11">tertiary</data>
-  <data key="d12">['3', '2']</data>
+  <data key="d12">['2', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Via Favència</data>
   <data key="d15">True</data>
@@ -15761,7 +15761,7 @@
 </edge>
 <edge source="434423018" target="434423060" id="0">
   <data key="d10">[37284056, 971410019]</data>
-  <data key="d11">['residential', 'pedestrian']</data>
+  <data key="d11">['pedestrian', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
   <data key="d14">Carrer de Parellada</data>
@@ -16276,7 +16276,7 @@
 </edge>
 <edge source="434437196" target="434437209" id="0">
   <data key="d10">[37285416, 884461756]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Costa Rica</data>
@@ -17342,10 +17342,10 @@
 </edge>
 <edge source="598219933" target="9873768074" id="0">
   <data key="d10">[1224439320, 46837552, 302996811, 1076760076]</data>
-  <data key="d11">['residential', 'service']</data>
+  <data key="d11">['service', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
-  <data key="d14">['Passeig de la Verneda', 'Carrer de les Cordelles']</data>
+  <data key="d14">['Carrer de les Cordelles', 'Passeig de la Verneda']</data>
   <data key="d15">False</data>
   <data key="d16">False</data>
   <data key="d17">464.5704460755547</data>
@@ -17913,8 +17913,8 @@
 <edge source="598222073" target="12961323920" id="0">
   <data key="d10">[237799300, 543586732, 1410572247]</data>
   <data key="d11">residential</data>
-  <data key="d12">['4', '1']</data>
-  <data key="d13">['50', '30']</data>
+  <data key="d12">['1', '4']</data>
+  <data key="d13">['30', '50']</data>
   <data key="d14">Carrer de la Ciutat d'Asunción</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -18004,7 +18004,7 @@
 <edge source="598222623" target="600061448" id="0">
   <data key="d10">[1453993415, 1453993417, 46837741, 450385069, 451731023]</data>
   <data key="d11">tertiary</data>
-  <data key="d12">['3', '2']</data>
+  <data key="d12">['2', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Carrer de Palomar</data>
   <data key="d15">True</data>
@@ -18018,7 +18018,7 @@
 <edge source="598222623" target="1451223126" id="0">
   <data key="d10">[159141212, 1409683701]</data>
   <data key="d11">secondary</data>
-  <data key="d12">['3', '2']</data>
+  <data key="d12">['2', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Carrer de Ferran Junoy</data>
   <data key="d15">True</data>
@@ -18031,7 +18031,7 @@
 <edge source="598222624" target="600061447" id="0">
   <data key="d10">[310478788, 1453993414, 47044939, 1453993419, 450385071, 451731024]</data>
   <data key="d11">tertiary</data>
-  <data key="d12">['3', '2', '1']</data>
+  <data key="d12">['2', '1', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Carrer de Palomar</data>
   <data key="d15">True</data>
@@ -18045,7 +18045,7 @@
 <edge source="598222624" target="600061478" id="0">
   <data key="d10">[1409683704, 1409683705, 1274912738, 1409683703]</data>
   <data key="d11">secondary</data>
-  <data key="d12">['3', '2']</data>
+  <data key="d12">['2', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Carrer de Ferran Junoy</data>
   <data key="d15">True</data>
@@ -18657,7 +18657,7 @@
   <data key="d11">tertiary</data>
   <data key="d12">4</data>
   <data key="d13">50</data>
-  <data key="d14">['Passeig de Torras i Bages', 'Carrer del Segre']</data>
+  <data key="d14">['Carrer del Segre', 'Passeig de Torras i Bages']</data>
   <data key="d15">False</data>
   <data key="d16">True</data>
   <data key="d17">111.0804106404298</data>
@@ -18797,7 +18797,7 @@
 </edge>
 <edge source="598224513" target="598224812" id="0">
   <data key="d10">[907714024, 116558926]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Sòcrates</data>
@@ -20296,7 +20296,7 @@
   <data key="d24">yes</data>
   <data key="d11">residential</data>
   <data key="d12">3</data>
-  <data key="d13">['50', '30']</data>
+  <data key="d13">['30', '50']</data>
   <data key="d14">Passeig de Torras i Bages</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -20395,7 +20395,7 @@
 </edge>
 <edge source="618404480" target="10926004932" id="0">
   <data key="d10">[301322216, 1175869289]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d14">Carrer de Biscaia</data>
   <data key="d15">True</data>
@@ -20573,7 +20573,7 @@
 <edge source="769906808" target="3274842644" id="0">
   <data key="d10">[1111830360, 544601549, 546677359]</data>
   <data key="d11">tertiary</data>
-  <data key="d12">['3', '1']</data>
+  <data key="d12">['1', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Carrer de Sant Antoni Maria Claret</data>
   <data key="d15">True</data>
@@ -21859,7 +21859,7 @@
 </edge>
 <edge source="1298458116" target="1298458117" id="0">
   <data key="d10">[891271858, 114682782]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Guardiola i Feliu</data>
@@ -21975,7 +21975,7 @@
 </edge>
 <edge source="1298628783" target="1298628785" id="0">
   <data key="d10">[1023455587, 114702094]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Santa Marta</data>
   <data key="d15">True</data>
@@ -22203,7 +22203,7 @@
 </edge>
 <edge source="1299613770" target="10230554865" id="0">
   <data key="d10">[891271837, 370782790]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de Valentí Iglesias</data>
@@ -22408,7 +22408,7 @@
 </edge>
 <edge source="1303363172" target="9870574443" id="0">
   <data key="d10">[1219283872, 1275832714, 1275832715]</data>
-  <data key="d11">['residential', 'pedestrian']</data>
+  <data key="d11">['pedestrian', 'residential']</data>
   <data key="d14">Carrer de Sant Adrià</data>
   <data key="d15">False</data>
   <data key="d16">False</data>
@@ -22601,7 +22601,7 @@
 </edge>
 <edge source="1303430273" target="7634532958" id="0">
   <data key="d10">[115319576, 817469713, 1076302024]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d14">["Carrer d'Olesa", 'Passatge de la Companyia']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -22963,7 +22963,7 @@
   <data key="d10">[818182307, 553778901]</data>
   <data key="d11">tertiary</data>
   <data key="d13">30</data>
-  <data key="d14">['Carrer Gran de la Sagrera', 'Carrer del Clot']</data>
+  <data key="d14">['Carrer del Clot', 'Carrer Gran de la Sagrera']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">40.01600224860674</data>
@@ -23027,7 +23027,7 @@
 <edge source="1312053375" target="2767355571" id="0">
   <data key="d10">[284577562, 38132669]</data>
   <data key="d11">residential</data>
-  <data key="d12">['3', '2']</data>
+  <data key="d12">['2', '3']</data>
   <data key="d13">30</data>
   <data key="d14">Carrer de Concepción Arenal</data>
   <data key="d15">True</data>
@@ -23055,7 +23055,7 @@
   <data key="d11">tertiary</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
-  <data key="d14">['Carrer de Virgili', 'Carrer del Segre']</data>
+  <data key="d14">['Carrer del Segre', 'Carrer de Virgili']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">42.82632930372799</data>
@@ -23341,7 +23341,7 @@
 </edge>
 <edge source="1313997605" target="9873768075" id="0">
   <data key="d10">[116586231, 1076760079]</data>
-  <data key="d11">['residential', 'path']</data>
+  <data key="d11">['path', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
   <data key="d14">Passatge del Torrent de l'Estadella</data>
@@ -24226,7 +24226,7 @@
 </edge>
 <edge source="1852768637" target="1857472227" id="0">
   <data key="d10">[237787034, 669433339]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">Carrer de la Foradada</data>
@@ -24867,7 +24867,7 @@
   <data key="d11">residential</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
-  <data key="d14">['Carrer de Peníscola', 'Carrer del Pare Manjón']</data>
+  <data key="d14">['Carrer del Pare Manjón', 'Carrer de Peníscola']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">124.01322757435021</data>
@@ -25102,7 +25102,7 @@
 </edge>
 <edge source="2020393224" target="11459143309" id="0">
   <data key="d10">[897533906, 1234556227, 1023261748]</data>
-  <data key="d11">['residential', 'service']</data>
+  <data key="d11">['service', 'residential']</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
   <data key="d14">Carrer del Camp del Ferro</data>
@@ -25386,7 +25386,7 @@
 </edge>
 <edge source="2293731643" target="6744499279" id="0">
   <data key="d10">[164327617, 1274820985, 1261909542]</data>
-  <data key="d11">['residential', 'living_street']</data>
+  <data key="d11">['living_street', 'residential']</data>
   <data key="d13">['30', '20']</data>
   <data key="d14">['Carrer de Josep Estivill', 'Carrer de Biscaia']</data>
   <data key="d15">True</data>
@@ -25767,7 +25767,7 @@
 <edge source="2537106456" target="8841514202" id="0">
   <data key="d10">[1210743008, 1017879299, 1110944425, 955273580, 1317032479, 928877948, 1451794364, 1210743006, 1210743007]</data>
   <data key="d11">cycleway</data>
-  <data key="d14">['Carrer de Berenguer de Palou', 'Carrer de Mercè Torrents i Turmo', 'Carrer Gran de la Sagrera']</data>
+  <data key="d14">['Carrer Gran de la Sagrera', 'Carrer de Berenguer de Palou', 'Carrer de Mercè Torrents i Turmo']</data>
   <data key="d15">False</data>
   <data key="d16">[False, True]</data>
   <data key="d17">236.03198237891385</data>
@@ -25779,7 +25779,7 @@
 <edge source="2537106456" target="11217697643" id="0">
   <data key="d10">[1110944425, 1317032477, 1317032478]</data>
   <data key="d11">cycleway</data>
-  <data key="d14">['Carrer de Mercè Torrents i Turmo', 'Carrer Gran de la Sagrera']</data>
+  <data key="d14">['Carrer Gran de la Sagrera', 'Carrer de Mercè Torrents i Turmo']</data>
   <data key="d15">False</data>
   <data key="d16">False</data>
   <data key="d17">49.74363006786389</data>
@@ -26576,7 +26576,7 @@
 </edge>
 <edge source="2767355570" target="4992786946" id="0">
   <data key="d10">[237645149, 310478798]</data>
-  <data key="d11">['residential', 'tertiary']</data>
+  <data key="d11">['tertiary', 'residential']</data>
   <data key="d12">2</data>
   <data key="d13">50</data>
   <data key="d14">Carrer d'Olesa</data>
@@ -26770,7 +26770,7 @@
   <data key="d11">residential</data>
   <data key="d12">1</data>
   <data key="d13">30</data>
-  <data key="d14">['Carrer del Pare Pérez del Pulgar', 'Carretera de Ribes']</data>
+  <data key="d14">['Carretera de Ribes', 'Carrer del Pare Pérez del Pulgar']</data>
   <data key="d15">False</data>
   <data key="d16">True</data>
   <data key="d17">86.99274961371</data>
@@ -27109,7 +27109,7 @@
   <data key="d11">['residential', 'living_street']</data>
   <data key="d12">1</data>
   <data key="d13">['30', '20']</data>
-  <data key="d14">['Carrer de Capella', "Passatge d'Aloi"]</data>
+  <data key="d14">["Passatge d'Aloi", 'Carrer de Capella']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">144.5928207935643</data>
@@ -27549,11 +27549,11 @@
 <edge source="3807075709" target="12643326925" id="0">
   <data key="d10">[450125628, 29382666, 450125614, 1465626263, 378353276]</data>
   <data key="d11">primary</data>
-  <data key="d12">['4', '3', '5']</data>
+  <data key="d12">['4', '5', '3']</data>
   <data key="d13">50</data>
   <data key="d14">Avinguda Meridiana</data>
   <data key="d15">True</data>
-  <data key="d22">['12', '11', '10', '14']</data>
+  <data key="d22">['12', '11', '14', '10']</data>
   <data key="d16">False</data>
   <data key="d17">572.6525218164991</data>
   <data key="d18">yes</data>
@@ -28164,11 +28164,11 @@
 <edge source="4327379292" target="9632854477" id="0">
   <data key="d10">[450070501, 1057425613, 553609934, 292256784, 501616754, 210550075]</data>
   <data key="d11">['trunk', 'primary']</data>
-  <data key="d12">['4', '2']</data>
+  <data key="d12">['2', '4']</data>
   <data key="d13">50</data>
   <data key="d14">['Avinguda Meridiana', "Autovia de l'Ametlla"]</data>
   <data key="d15">True</data>
-  <data key="d22">['14', '13']</data>
+  <data key="d22">['13', '14']</data>
   <data key="d16">False</data>
   <data key="d17">417.0780187615486</data>
   <data key="d26">C-17</data>
@@ -29055,7 +29055,7 @@
   <data key="d10">[41382984, 279553410]</data>
   <data key="d11">living_street</data>
   <data key="d13">20</data>
-  <data key="d14">['Passatge de Coello', "Carrer d'Hondures"]</data>
+  <data key="d14">["Carrer d'Hondures", 'Passatge de Coello']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">121.33013279026389</data>
@@ -29542,7 +29542,7 @@
   <data key="d11">cycleway</data>
   <data key="d14">Carrer de Sant Antoni Maria Claret</data>
   <data key="d15">True</data>
-  <data key="d22">['1.2', '1']</data>
+  <data key="d22">['1', '1.2']</data>
   <data key="d16">False</data>
   <data key="d17">30.235461887563595</data>
   <data key="d19">LINESTRING (2.1836981 41.4181388, 2.1836027 41.4180711, 2.1835195 41.4180129, 2.1834513 41.4179598, 2.1834378 41.4179496)</data>
@@ -30242,7 +30242,7 @@
 <edge source="6203603463" target="6203603469" id="0">
   <data key="d10">[1318526992, 1318917041, 1318917042]</data>
   <data key="d11">cycleway</data>
-  <data key="d14">['Carrer de Dublín', 'Carrer de Rovira i Virgili']</data>
+  <data key="d14">['Carrer de Rovira i Virgili', 'Carrer de Dublín']</data>
   <data key="d15">False</data>
   <data key="d16">False</data>
   <data key="d17">33.929907379475836</data>
@@ -30311,7 +30311,7 @@
   <data key="d11">cycleway</data>
   <data key="d14">["Carrer d'Olesa", 'Carrer de Teodor Llorente']</data>
   <data key="d15">False</data>
-  <data key="d22">['1.2', '1.5']</data>
+  <data key="d22">['1.5', '1.2']</data>
   <data key="d16">False</data>
   <data key="d17">23.68101625895615</data>
   <data key="d19">LINESTRING (2.1808052 41.4194992, 2.1808535 41.4195288, 2.1809067 41.419568, 2.1810176 41.4196404)</data>
@@ -31027,7 +31027,7 @@
   <data key="d10">[251749491, 779573588]</data>
   <data key="d11">tertiary</data>
   <data key="d12">2</data>
-  <data key="d13">['50', '30']</data>
+  <data key="d13">['30', '50']</data>
   <data key="d14">Carrer del Segre</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
@@ -31411,7 +31411,7 @@
   <data key="d10">[884710603, 884710604, 884712988]</data>
   <data key="d11">residential</data>
   <data key="d13">30</data>
-  <data key="d14">['Carrer de Bellmunt', "Carrer d'Ardèvol", 'Passeig de Mollerussa']</data>
+  <data key="d14">['Carrer de Bellmunt', 'Passeig de Mollerussa', "Carrer d'Ardèvol"]</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">94.95822086021502</data>
@@ -32493,7 +32493,7 @@
   <data key="d10">[1096724688, 1237093545, 1096725484]</data>
   <data key="d11">tertiary</data>
   <data key="d12">1</data>
-  <data key="d14">['Carrer Gran de la Sagrera', 'Carrer del Clot']</data>
+  <data key="d14">['Carrer del Clot', 'Carrer Gran de la Sagrera']</data>
   <data key="d15">True</data>
   <data key="d16">False</data>
   <data key="d17">154.72775096020007</data>

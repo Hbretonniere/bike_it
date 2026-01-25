@@ -53,20 +53,15 @@ def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
 
 def latest_stats_image(base_dir: str, user: str, district: str) -> str | None:
     if district == 'Barcelona':
-        pattern = os.path.join(base_dir,user,f'stats-{user}-*.png')
+        pattern = os.path.join(base_dir,user,f'stats-{user}.jpg')
     else:
-        pattern = os.path.join(base_dir,user,f'stats-{district}-{user}-*.png')
-
+        pattern = os.path.join(base_dir,user,f'stats-{district}-{user}.jpg')
+  #  print("pattern",pattern)
     candidates = glob.glob(pattern)
     if not candidates:
         return None
 
-    def extract_date(path):
-        filename = os.path.basename(path)
-        date_str = filename.replace('.png', '').split('-')[-3:]
-        return datetime.strptime('-'.join(date_str), '%Y-%m-%d')
-
-    return max(candidates, key=extract_date)
+    return candidates[0]
 
 
 def get_user_districts(user: str):
@@ -152,7 +147,7 @@ def user_view(user: str):
             bar2.style(f'height: {ratio_segments}%')
             percent_label2.set_text(f'{int(ratio_segments)}%')
 
-            stats_path = latest_stats_image('stats/'+user, user, d)
+            stats_path = latest_stats_image('stats/', user, d)
             if stats_image and stats_path:
                 stats_image.set_source(stats_path)
             else:
@@ -215,6 +210,7 @@ def user_view(user: str):
     # STATS IMAGE (FULL WIDTH, CENTERED)
     # ─────────────────────────────────────────
     stats_path = latest_stats_image('stats', user, state['districts'])
+ #   print("stats_path",stats_path)
     stats_image = None
 
     if stats_path:

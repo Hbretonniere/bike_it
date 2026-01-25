@@ -17,7 +17,7 @@ from matplotlib.lines import Line2D
 def get_graph_stats(graph,district):
     stats_district = district+".json"
     if os.path.exists(stats_district):
-        print("Load stats from file")
+        print("Load stats from file ",district)
         with open(stats_district, "r") as f:
             return json.load(f)
     else:
@@ -161,9 +161,13 @@ def highlight_edges(graph,list_edges,user,color,district,date):
 def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date):
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
-    print(f"Plotting {district} for {date}")
-    
-    fig, ax = ox.plot.plot_graph(
+    if user == "comparison":
+        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.jpg"
+    else:
+        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg"
+    if user == "comparison" or ( (user != "comparison") and (not os.path.isfile(plot_name) ) ):
+        print(f"Plotting {district} for {date}")  
+        fig, ax = ox.plot.plot_graph(
             graph_dict,
             edge_color=edge_colors,#[user][district],
             edge_linewidth=0.5, #edge_widths[user][district],
@@ -172,20 +176,17 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             node_zorder=0,
             bgcolor="w"
         )
-    if user == "comparison":
-        legend_elements = [
-            Line2D([0], [0], color='red', lw=2, label='Both'),
-            Line2D([0], [0], color='blue', lw=2, label='Hubert only'),
-            Line2D([0], [0], color='green', lw=2, label='PA only'),
-        ]
-        ax.legend(handles=legend_elements, loc='lower right')
-        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.jpg"
-    else:
-        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg"
-
-    ax.set_title(f"{district} - {user} ({date})")
-    fig.savefig(plot_name, dpi=500, bbox_inches='tight')
-    plt.close(fig) 
+        if user == "comparison":
+            legend_elements = [
+                Line2D([0], [0], color='red', lw=2, label='Both'),
+                Line2D([0], [0], color='blue', lw=2, label='Hubert only'),
+                Line2D([0], [0], color='green', lw=2, label='PA only'),
+            ]
+            ax.legend(handles=legend_elements, loc='lower right')
+    
+        ax.set_title(f"{district} - {user} ({date})")
+        fig.savefig(plot_name, dpi=500, bbox_inches='tight')
+        plt.close(fig) 
 
 def get_number_of_mapped_streets(list_edges):
     mapped_street_names = [edge_data[1] for edge_data in list_edges]
@@ -225,8 +226,11 @@ def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
         if stats_file in all_prev:
             idx = all_prev.index(stats_file)
             prev_stats_file = all_prev[idx-1] if idx > 0 else None
+            print("prev",prev_stats_file)
         else:
             prev_stats_file = all_prev[-1] if all_prev else None
+            print("prev",prev_stats_file)
+
             
         df_prev = pd.read_csv(prev_stats_file) if prev_stats_file else []
     except:
@@ -295,7 +299,7 @@ def plot_stats(final_table,previous_table,list_districts):
 def wrap_header(text, width=14):
     return "\n".join(textwrap.wrap(text, width=width))
 
-def dataframe_to_png(df, filename, list_districts):
+def dataframe_to_jpg(df, filename, list_districts):
     df_display = df.copy().reset_index(drop=True)
     try:
         df_display.insert(0, "districts", list_districts)
