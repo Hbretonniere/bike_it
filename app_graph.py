@@ -33,7 +33,7 @@ def latest_stats_df(base_dir: str, user: str) -> pd.DataFrame | None:
 
 def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
     user_dir = os.path.join(base_dir, user)
-    pattern = os.path.join(user_dir, f'{district}-{user}*.jpg')
+    pattern = os.path.join(user_dir, f'{district}-{user}*.png')
     candidates = glob.glob(pattern)
     
     def extract_date(path):
@@ -53,9 +53,9 @@ def latest_image_path(base_dir: str, user: str, district: str) -> str | None:
 
 def latest_stats_image(base_dir: str, user: str, district: str) -> str | None:
     if district == 'Barcelona':
-        pattern = os.path.join(base_dir,user,f'stats-{user}.jpg')
+        pattern = os.path.join(base_dir,user,f'stats-{user}.png')
     else:
-        pattern = os.path.join(base_dir,user,f'stats-{district}-{user}.jpg')
+        pattern = os.path.join(base_dir,user,f'stats-{district}-{user}.png')
   #  print("pattern",pattern)
     candidates = glob.glob(pattern)
     if not candidates:
@@ -66,7 +66,7 @@ def latest_stats_image(base_dir: str, user: str, district: str) -> str | None:
 
 def get_user_districts(user: str):
     user_dir = os.path.join(BASE_DIR, user)
-    image_list = glob.glob(f'{user_dir}/*.jpg')
+    image_list = glob.glob(f'{user_dir}/*.png')
 
     districts = []
     for p in image_list:

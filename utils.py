@@ -162,9 +162,9 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
     if user == "comparison":
-        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.jpg"
+        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
     else:
-        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.jpg"
+        plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.png"
     if user == "comparison" or ( (user != "comparison") and (not os.path.isfile(plot_name) ) ):
         print(f"Plotting {district} for {date}")  
         fig, ax = ox.plot.plot_graph(
@@ -185,7 +185,8 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             ax.legend(handles=legend_elements, loc='lower right')
     
         ax.set_title(f"{district} - {user} ({date})")
-        fig.savefig(plot_name, dpi=500, bbox_inches='tight')
+        #fig.savefig(plot_name, dpi=500, bbox_inches='tight')
+        fig.savefig(plot_name, dpi=250, bbox_inches='tight')
         plt.close(fig) 
 
 def get_number_of_mapped_streets(list_edges):
@@ -226,16 +227,13 @@ def get_final_stats(user, list_edges, graph_dict, list_districts, stats, date):
         if stats_file in all_prev:
             idx = all_prev.index(stats_file)
             prev_stats_file = all_prev[idx-1] if idx > 0 else None
-            print("prev",prev_stats_file)
         else:
             prev_stats_file = all_prev[-1] if all_prev else None
-            print("prev",prev_stats_file)
 
             
         df_prev = pd.read_csv(prev_stats_file) if prev_stats_file else []
     except:
         df_prev = []
-
     if os.path.exists(stats_file):
         df = pd.read_csv(stats_file)
     else:
@@ -275,7 +273,6 @@ def plot_stats(final_table,previous_table,list_districts):
         diff = diff.reset_index()
         display_cols = []
         new_data = {}
-
         for col in final_table.columns:
             if col != "districts":
                 new_data[col] = final_table[col]
@@ -299,13 +296,12 @@ def plot_stats(final_table,previous_table,list_districts):
 def wrap_header(text, width=14):
     return "\n".join(textwrap.wrap(text, width=width))
 
-def dataframe_to_jpg(df, filename, list_districts):
+def dataframe_to_png(df, filename, list_districts):
     df_display = df.copy().reset_index(drop=True)
     try:
         df_display.insert(0, "districts", list_districts)
     except:
         pass
-
     col_labels = [wrap_header(c) for c in df_display.columns]
     cell_text = df_display.round(1).astype(str).values
 
@@ -325,7 +321,6 @@ def dataframe_to_jpg(df, filename, list_districts):
             col_widths.append(0.10)
         else:
             col_widths.append(0.085)
-
     table = ax.table(
         cellText=cell_text,
         colLabels=col_labels,
@@ -337,7 +332,6 @@ def dataframe_to_jpg(df, filename, list_districts):
     table.auto_set_font_size(False)
     table.set_fontsize(10)
     table.scale(1, 1.6)
-
     for (row, col), cell in table.get_celld().items():
         # Header row
         if row == 0:
@@ -352,7 +346,6 @@ def dataframe_to_jpg(df, filename, list_districts):
         # Diff columns
         if "diff" in df_display.columns[col] and row > 0:
             cell.set_text_props(color="green", weight="bold")
-
     plt.tight_layout()
     plt.savefig(filename, dpi=200, bbox_inches="tight")
     plt.close()
@@ -362,7 +355,7 @@ def filter_df_for_district(df, list_districts, district_name):
     return df.iloc[[idx]]
 
 def create_gif(district, user):
-    images = sorted(glob.glob("plots/"+user+"/"+district.replace(' ', '_')+"-"+user+".*.jpg"))
+    images = sorted(glob.glob("plots/"+user+"/"+district.replace(' ', '_')+"-"+user+".*.png"))
     district_clean = district.replace(" ", "_")
     gif_dir = "gifs/"+user
     gif_name = gif_dir+"/"+district_clean+"-"+user+".gif"
@@ -373,7 +366,6 @@ def create_gif(district, user):
             processed_images = json.load(f)
     else:
         processed_images = []
-
     new_images = [img for img in images if img not in processed_images]
     new_img_objects = [Image.open(f) for f in new_images]
     if os.path.exists(gif_name):
@@ -397,9 +389,9 @@ def create_gif(district, user):
     with open(list_processed, "w") as f:
         json.dump(processed_images + new_images, f, indent=2)
     
-    img_objects = [Image.open(f) for f in images]
+   # img_objects = [Image.open(f) for f in images]
     
-    for img in img_objects:
+    for img in new_img_objects:
         img.close()
 
 def merge_edges(edge_colors_pa,edge_colors_hubert):

@@ -93,7 +93,7 @@ for user in users:
             edge_colors[user][district] = colors
             edge_widths[user][district] = widths
 
-        stats_check_file = f"stats/{user}/stats-{user}.jpg"
+        stats_check_file = f"stats/{user}/stats-{user}.png"
         #if not os.path.exists(stats_check_file):
         for district in list_districts:
             plot_mapped(
@@ -113,14 +113,13 @@ for user in users:
         
         styled_stats = plot_stats(final_table, previous_table, list_districts)
         if current_date == last_day:
-            dataframe_to_jpg(styled_stats.data, stats_check_file, list_districts)
-        
+            dataframe_to_png(styled_stats.data, stats_check_file, list_districts)
             for district in list_districts:
                 table_stats_district = filter_df_for_district(styled_stats.data, list_districts, district)
                 print("plotting stats",current_date,district,user)
-                dataframe_to_jpg(
+                dataframe_to_png(
                     table_stats_district,
-                    f"stats/{user}/stats-{district}-{user}.jpg",
+                    f"stats/{user}/stats-{district}-{user}.png",
                     [district]
                 )
                 create_gif(district, user)
