@@ -396,7 +396,7 @@ def create_gif(district, user):
 
 def merge_edges(edge_colors_pa,edge_colors_hubert):
     merged_colors = []
-    for i in range(len(edge_colors_hubert)):
+    for i in range(max(len(edge_colors_hubert),len(edge_colors_pa))):
         if edge_colors_hubert[i] == "red":
             if edge_colors_pa[i] == "red":
                 merged_colors.append("red") #mapped by both
