@@ -7,6 +7,7 @@ from shapely.geometry import LineString
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from shapely.geometry import Point
 import contextily as ctx
 import matplotlib.animation as animation
@@ -16,6 +17,7 @@ import osmnx as ox
 import os
 import ast
 import argparse
+import re
 
 parser = argparse.ArgumentParser()
 
@@ -135,3 +137,93 @@ for district in list_districts:
         color,
         current_date
     )
+
+
+#plot timeseries
+path_stats = os.path.join('stats', '*', 'stats-*.csv')
+files = glob.glob(path_stats)
+
+data_list = []
+for f in files:
+    filename = os.path.basename(f)
+    match = re.search(r'stats-([^-^_]+)[-_](\d{4}-\d{2}-\d{2})\.csv', filename)
+    
+    if match:
+        user_name, date_str = match.groups()
+        df_temp = pd.read_csv(f)
+        df_temp.columns = df_temp.columns.str.strip()
+        df_temp['user'] = user_name
+        df_temp['date'] = pd.to_datetime(date_str)
+        data_list.append(df_temp)
+
+full_df = pd.concat(data_list)
+
+for district in list_districts:
+    dist_info = full_df[full_df['districts'] == district].iloc[0]
+    total_str = dist_info['total number of streets']
+    total_seg = dist_info['total number of segments']
+
+    # --- Individual plots for each user (2 timeseries) ---
+    for user in users:
+        os.makedirs(f"plots/{user}/timeseries/", exist_ok=True)
+        data = full_df[(full_df['districts'] == district) & (full_df['user'] == user)].sort_values('date')
+        if data.empty:
+            continue
+        
+        fig, ax1 = plt.subplots(figsize=(10, 6))
+        ax2 = ax1.twinx()
+        
+        l1 = ax1.plot(data['date'], data['number of mapped streets'], color='tab:blue', marker='o', label='Streets')
+        l2 = ax2.plot(data['date'], data['number of mapped segments'], color='tab:red', marker='s', label='Segments')
+        
+        ax1.set_xlabel('Date')
+        ax1.set_ylabel(f'Mapped Street (Total: {total_str})', color='tab:blue')
+        ax2.set_ylabel(f'Mapped Segments (Total: {total_seg})', color='tab:red')
+        plt.title(f"{district.replace('_', ' ')} - {user}")
+        
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        fig.autofmt_xdate()
+        
+        lns = l1 + l2
+        labs = [l.get_label() for l in lns]
+        ax1.legend(lns, labs, loc='upper left')
+        
+        plt.tight_layout()
+        plt.savefig(f"plots/{user}/timeseries/{district}-{user}.png")
+        plt.close()
+
+    # --- Comparison plot for each district (4 timeseries) ---
+    fig, ax1 = plt.subplots(figsize=(12, 7))
+    ax2 = ax1.twinx()
+    
+    user_colors = {'pa': 'tab:blue', 'hubert': 'tab:green'}
+    all_lines = []
+
+    for user in users:
+        data = full_df[(full_df['districts'] == district) & (full_df['user'] == user)].sort_values('date')
+        if data.empty:
+            continue
+        
+        l_street = ax1.plot(data['date'], data['number of mapped streets'], color=user_colors[user], 
+                            linestyle='-', marker='o', label=f'{user} Streets')
+        l_segment = ax2.plot(data['date'], data['number of mapped segments'], color=user_colors[user], 
+                                linestyle='--', marker='x', label=f'{user} Segments')
+        
+        all_lines.extend(l_street + l_segment)
+        
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel(f'Number of mapped streets (Total: {total_str})')
+    ax2.set_ylabel(f'Number of mapped segments (Total: {total_seg})')
+    plt.title(f"{district.replace('_', ' ')} - Comparison")
+    
+    # Format X-axis
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    fig.autofmt_xdate()
+    
+    labs = [l.get_label() for l in all_lines]
+    ax1.legend(all_lines, labs, loc='upper left', ncol=2, fontsize='small')
+    
+    plt.tight_layout()
+    os.makedirs(f"plots/comparison/timeseries/", exist_ok=True)
+    plt.savefig(f"plots/comparison/timeseries/{district}.png")
+    plt.close()
