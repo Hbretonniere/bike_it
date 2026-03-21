@@ -24,8 +24,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
         "--users", 
         nargs='+', 
-        default=['hubert', 'pa'], 
-        help="User from which to generate the stats. Default is all (pa, hubert). Looks for data in segments/user."
+        default=['Hubert', 'PA'], 
+        help="User from which to generate the stats. Default is all (PA, Hubert). Looks for data in segments/user."
     )
 
 parser.add_argument(
@@ -105,7 +105,8 @@ for user in users:
                 edge_colors[user][district],
                 edge_widths[user][district],
                 color,
-                current_date
+                current_date,
+                last_day
             )
 
         
@@ -127,7 +128,7 @@ for user in users:
                 create_gif(district, user)
 
 for district in list_districts:
-    merged_colors = merge_edges(edge_colors["pa"][district], edge_colors["hubert"][district])
+    merged_colors = merge_edges(edge_colors["PA"][district], edge_colors["Hubert"][district])
     plot_mapped(
         graph_dict[district],
         "comparison",
@@ -135,7 +136,8 @@ for district in list_districts:
         merged_colors,
         0.5,
         color,
-        current_date
+        current_date,
+        last_day
     )
 
 
@@ -196,7 +198,7 @@ for district in list_districts:
     fig, ax1 = plt.subplots(figsize=(12, 7))
     ax2 = ax1.twinx()
     
-    user_colors = {'pa': 'tab:blue', 'hubert': 'tab:green'}
+    user_colors = {'PA': 'tab:blue', 'Hubert': 'tab:green'}
     all_lines = []
 
     for user in users:
@@ -228,6 +230,6 @@ for district in list_districts:
     plt.savefig(f"plots/comparison/timeseries/{district}.png")
     plt.close()
 
-print("Starting GPX geometry export...")
-for user in users:
-        export_snapped_gpx(graph_dict["Barcelona"], user, "Barcelona")
+# print("Starting GPX geometry export...")
+# for user in users:
+#         export_snapped_gpx(graph_dict["Barcelona"], user, "Barcelona")

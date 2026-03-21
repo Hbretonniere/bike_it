@@ -13,6 +13,7 @@ from datetime import datetime
 from PIL import Image
 import json
 from matplotlib.lines import Line2D
+import shutil
 
 def get_graph_stats(graph,district):
     stats_district = district+".json"
@@ -158,13 +159,16 @@ def highlight_edges(graph,list_edges,user,color,district,date):
     return edge_colors, edge_widths
 
 
-def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date):
+def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date,last_day):
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
     if user == "comparison":
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
+        latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
     else:
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.png"
+        latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
+
     if user == "comparison" or ( (user != "comparison") and (not os.path.isfile(plot_name) ) ):
         print(f"Plotting {district} for {date}")  
         fig, ax = ox.plot.plot_graph(
@@ -185,9 +189,13 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             ax.legend(handles=legend_elements, loc='lower right')
     
         ax.set_title(f"{district} - {user} ({date})")
-        #fig.savefig(plot_name, dpi=500, bbox_inches='tight')
         fig.savefig(plot_name, dpi=250, bbox_inches='tight')
-        plt.close(fig) 
+        plt.close(fig)
+    if (date == last_day):
+            try:
+                shutil.copy(plot_name,latest_plot)
+            except:
+                pass 
 
 def get_number_of_mapped_streets(list_edges):
     mapped_street_names = [edge_data[1] for edge_data in list_edges]

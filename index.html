@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bike_it</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 🔝 Top navigation -->
+  <header>
+    <button onclick="navigate('PA')">PA</button>
+    <button onclick="navigate('Hubert')">Hubert</button>
+    <button onclick="navigate('comparison')">Comparison</button>
+  </header>
+
+  <!-- 🖼️ Main layout -->
+  <div class="top-section">
+    <img id="bar" />
+    <img id="main_pic" />
+  </div>
+
+  <!-- 🖼️ Full width images -->
+  <div class="table_stats">
+    <img id="table_stats" />
+  </div>
+  
+  <div class="timeseries">
+    <img id="timeseries" />
+  </div>
+  
+  <!-- 🗺️ District selector -->
+  <div class="district-grid" id="districtGrid"></div>
+
+  <script src="functions.js"></script>
+</body>
+</html>
