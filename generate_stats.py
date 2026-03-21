@@ -227,3 +227,7 @@ for district in list_districts:
     os.makedirs(f"plots/comparison/timeseries/", exist_ok=True)
     plt.savefig(f"plots/comparison/timeseries/{district}.png")
     plt.close()
+
+print("Starting GPX geometry export...")
+for user in users:
+        export_snapped_gpx(graph_dict["Barcelona"], user, "Barcelona")

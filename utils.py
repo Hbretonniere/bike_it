@@ -409,3 +409,57 @@ def merge_edges(edge_colors_pa,edge_colors_hubert):
                 merged_colors.append("grey") #mapped by Hubert none
     return merged_colors
 
+
+from shapely.geometry import Point
+
+def export_snapped_gpx(graph, user, district):
+    # Retrieve original coordinates and timestamps
+    coords_gpx, _, dates_gpx = get_coords_dates_gpx(user)
+    lats = [c[0] for c in coords_gpx]
+    lons = [c[1] for c in coords_gpx]
+
+    # Snap all points to find the nearest edges
+    edge_ids = ox.nearest_edges(graph, X=lons, Y=lats)
+    gdf_edges = ox.graph_to_gdfs(graph, nodes=False)
+
+    # Prepare new GPX structure
+    new_gpx = gpxpy.gpx.GPX()
+    gpx_track = gpxpy.gpx.GPXTrack(name=f"{user}_{district}_snapped")
+    new_gpx.tracks.append(gpx_track)
+    gpx_segment = gpxpy.gpx.GPXTrackSegment()
+    gpx_track.segments.append(gpx_segment)
+
+    for i, (u, v, k) in enumerate(edge_ids):
+        # 1. Get the actual road geometry (LineString)
+        edge_data = gdf_edges.loc[(u, v, k)]
+        geometry = edge_data.get('geometry')
+
+        # 2. Identify original point
+        original_pt = Point(lons[i], lats[i])
+
+        if geometry is None:
+            # Fallback for straight edges without complex geometry
+            node_u = graph.nodes[u]
+            node_v = graph.nodes[v]
+            # Create a simple line between nodes to snap to
+            from shapely.geometry import LineString
+            geometry = LineString([(node_u['x'], node_u['y']), (node_v['x'], node_v['y'])])
+
+        # 3. Project original point onto the edge to find the closest snapped coordinate
+        # .project finds distance along line; .interpolate returns the point at that distance
+        snapped_pt = geometry.interpolate(geometry.project(original_pt))
+
+        # 4. Append to GPX (lon, lat)
+        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(
+            latitude=snapped_pt.y,
+            longitude=snapped_pt.x,
+            time=dates_gpx[i]
+        ))
+
+    # Save output
+    os.makedirs(f"cleaned_gpx/{user}", exist_ok=True)
+    output_path = f"cleaned_gpx/{user}/{district}_snapped.gpx"
+    with open(output_path, "w") as f:
+        f.write(new_gpx.to_xml())
+    
+    print(f"Point-snapped GPX saved: {output_path}")
