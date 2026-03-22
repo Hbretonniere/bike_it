@@ -162,14 +162,14 @@ def highlight_edges(graph,list_edges,user,color,district,date):
 def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date,last_day):
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
-    if user == "comparison":
+    if user == "Comparison":
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
         latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
     else:
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.png"
         latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
 
-    if user == "comparison" or ( (user != "comparison") and (not os.path.isfile(plot_name) ) ):
+    if user == "Comparison" or ( (user != "Comparison") and (not os.path.isfile(plot_name) ) ):
         print(f"Plotting {district} for {date}")  
         fig, ax = ox.plot.plot_graph(
             graph_dict,
@@ -180,7 +180,7 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             node_zorder=0,
             bgcolor="w"
         )
-        if user == "comparison":
+        if user == "Comparison":
             legend_elements = [
                 Line2D([0], [0], color='red', lw=2, label='Both'),
                 Line2D([0], [0], color='blue', lw=2, label='Hubert only'),

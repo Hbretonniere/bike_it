@@ -131,7 +131,7 @@ for district in list_districts:
     merged_colors = merge_edges(edge_colors["PA"][district], edge_colors["Hubert"][district])
     plot_mapped(
         graph_dict[district],
-        "comparison",
+        "Comparison",
         district,
         merged_colors,
         0.5,
@@ -204,6 +204,7 @@ for district in list_districts:
     for user in users:
         data = full_df[(full_df['districts'] == district) & (full_df['user'] == user)].sort_values('date')
         if data.empty:
+            print("empty data",user)
             continue
         
         l_street = ax1.plot(data['date'], data['number of mapped streets'], color=user_colors[user], 
@@ -226,8 +227,8 @@ for district in list_districts:
     ax1.legend(all_lines, labs, loc='upper left', ncol=2, fontsize='small')
     
     plt.tight_layout()
-    os.makedirs(f"plots/comparison/timeseries/", exist_ok=True)
-    plt.savefig(f"plots/comparison/timeseries/{district}.png")
+    os.makedirs(f"plots/Comparison/timeseries/", exist_ok=True)
+    plt.savefig(f"plots/Comparison/timeseries/{district}.png")
     plt.close()
 
 # print("Starting GPX geometry export...")
