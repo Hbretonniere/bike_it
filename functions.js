@@ -42,8 +42,19 @@ function render() {
 
   // 2. Main Picture
   const mainPicElem = document.getElementById("main_pic");
-  if (mainPicElem) {
-    mainPicElem.src = `plots/${currentUser}/${currentDistrict}-${currentUser}.png`;
+  const barPicElem = document.getElementById("bar_pic");
+  if (currentUser !== "Comparison") {
+    if (barPicElem) {
+      barPicElem.style.display = "block";
+      barPicElem.src = `stats/${currentUser}/stats_bars_${currentDistrict}_${currentUser}.png`;
+    }
+    if (mainPicElem) {
+      mainPicElem.src = `plots/${currentUser}/${currentDistrict}-${currentUser}.png`;
+    }
+  } else {
+    // Hide the top-section side bar when in Comparison mode
+    if (barPicElem) barPicElem.style.display = "none";
+    if (mainPicElem) mainPicElem.src = `plots/${currentUser}/${currentDistrict}-${currentUser}.png`;
   }
 
   // 3. Comparison Section Logic
@@ -53,6 +64,8 @@ function render() {
 
   if (currentUser === "Comparison") {
     compSection.style.display = "flex";
+    document.getElementById("bar_hubert").src = `stats/Hubert/stats_bars_${currentDistrict}_Hubert.png`;
+    document.getElementById("bar_pa").src = `stats/PA/stats_bars_${currentDistrict}_PA.png`;
     compLeft.src = `plots/Hubert/${currentDistrict}-Hubert.png`;
     compRight.src = `plots/PA/${currentDistrict}-PA.png`;
   } else {
@@ -63,7 +76,11 @@ function render() {
   const tableStatsElem = document.getElementById("table_stats");
  if (currentUser != "Comparison") {
   if (tableStatsElem) {
-    tableStatsElem.src = `stats/${currentUser}/stats-${currentDistrict}-${currentUser}.png`;
+    if (currentDistrict == "Barcelona") {
+      tableStatsElem.src = `stats/${currentUser}/stats-${currentUser}.png`;
+    } else {
+      tableStatsElem.src = `stats/${currentUser}/stats-${currentDistrict}-${currentUser}.png`;
+    }
   }
  } else {
    tableStatsElem.style.display = "none";

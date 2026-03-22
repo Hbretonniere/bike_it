@@ -418,7 +418,12 @@ def merge_edges(edge_colors_pa,edge_colors_hubert):
     return merged_colors
 
 def plot_district_user_bars(df, user, district):
+    """
+    Generates and saves a two-bar vertical chart where colors 'fill' 
+    a 100% background bar.
+    """
     try:
+        # Handle district filtering
         dist_data = filter_df_for_district(df, df['districts'].tolist(), district).iloc[0]
     except (IndexError, KeyError):
         return
@@ -429,37 +434,52 @@ def plot_district_user_bars(df, user, district):
     labels = ['Streets', 'Segments']
     values = [percentage_street, percentage_segments]
     
+    # Determine fill colors
     bar_colors = ['tab:blue', 'tab:red']
 
-    # Increased figure height slightly to accommodate the title
+    # Create the plot
     fig, ax = plt.subplots(figsize=(3, 7)) 
     
-    # Remove axis but keep the space for labels/titles
+    # Clean up the axis
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.get_yaxis().set_visible(False)
+    ax.set_ylim(-15, 110) # Room for labels below and title above
 
     positions = np.arange(len(labels))
-    bars = ax.bar(positions, values, width=0.5, color=bar_colors)
+    bar_width = 0.6
 
-    ax.set_title(f"{district.replace('_', ' ')}\n{user}", fontsize=14, fontweight='bold', pad=20)
+    # 1. Draw the BACKGROUND bars (the 100% "container")
+    ax.bar(positions, [100, 100], width=bar_width, color='#eeeeee', 
+           edgecolor='#cccccc', linewidth=0.5)
 
+    # 2. Draw the FILL bars (the actual data)
+    bars = ax.bar(positions, values, width=bar_width, color=bar_colors)
+
+    # Add the Title
+ #   ax.set_title(f"{district.replace('_', ' ')}\n{user}", fontsize=14, fontweight='bold', pad=25)
+
+    # Add percentage labels below the bars
     for bar, value in zip(bars, values):
         ax.text(bar.get_x() + bar.get_width() / 2, 
-                -5, 
+                -2, # Just below the baseline
                 f"{value:.0f}%", 
                 ha='center', va='top', fontsize=12, fontweight='bold')
 
-    # Add category labels (Streets/Segments) under the percentages
+    # Add category labels (Streets/Segments)
     ax.set_xticks(positions)
     ax.set_xticklabels(labels, fontsize=10, fontweight='bold')
+    
+    # Optional: Add a "100%" markers or light grid line at the top
+    ax.axhline(100, color='white', linewidth=1, linestyle='--', alpha=0.5)
 
     plt.tight_layout()
 
+    # Save the file
     os.makedirs(os.path.join("stats", user), exist_ok=True)
     clean_dist = district.replace(' ', '_')
-    output_filename = os.path.join(stats_dir, user, f"stats_bars_{clean_dist}_{user}.png")
+    output_filename = os.path.join("stats", user, f"stats_bars_{clean_dist}_{user}.png")
     
     fig.savefig(output_filename, dpi=200)
     plt.close()

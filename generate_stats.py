@@ -129,11 +129,9 @@ for user in users:
         if user != "Comparison":
             for district in list_districts:
                 plot_district_user_bars(
-                    final_table, # The unstyled stats DataFrame
+                    final_table,
                     user,
                     district,
-                    color, # Pass the input color for green handling
-                    "stats", # Root stats directory
                 )
 
 for district in list_districts:
