@@ -126,6 +126,15 @@ for user in users:
                     [district]
                 )
                 create_gif(district, user)
+        if user != "Comparison":
+            for district in list_districts:
+                plot_district_user_bars(
+                    final_table, # The unstyled stats DataFrame
+                    user,
+                    district,
+                    color, # Pass the input color for green handling
+                    "stats", # Root stats directory
+                )
 
 for district in list_districts:
     merged_colors = merge_edges(edge_colors["PA"][district], edge_colors["Hubert"][district])

@@ -417,6 +417,52 @@ def merge_edges(edge_colors_pa,edge_colors_hubert):
                 merged_colors.append("grey") #mapped by Hubert none
     return merged_colors
 
+def plot_district_user_bars(df, user, district):
+    try:
+        dist_data = filter_df_for_district(df, df['districts'].tolist(), district).iloc[0]
+    except (IndexError, KeyError):
+        return
+
+    percentage_street = dist_data['percentage street']
+    percentage_segments = dist_data['percentage segments']
+
+    labels = ['Streets', 'Segments']
+    values = [percentage_street, percentage_segments]
+    
+    bar_colors = ['tab:blue', 'tab:red']
+
+    # Increased figure height slightly to accommodate the title
+    fig, ax = plt.subplots(figsize=(3, 7)) 
+    
+    # Remove axis but keep the space for labels/titles
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    positions = np.arange(len(labels))
+    bars = ax.bar(positions, values, width=0.5, color=bar_colors)
+
+    ax.set_title(f"{district.replace('_', ' ')}\n{user}", fontsize=14, fontweight='bold', pad=20)
+
+    for bar, value in zip(bars, values):
+        ax.text(bar.get_x() + bar.get_width() / 2, 
+                -5, 
+                f"{value:.0f}%", 
+                ha='center', va='top', fontsize=12, fontweight='bold')
+
+    # Add category labels (Streets/Segments) under the percentages
+    ax.set_xticks(positions)
+    ax.set_xticklabels(labels, fontsize=10, fontweight='bold')
+
+    plt.tight_layout()
+
+    os.makedirs(os.path.join("stats", user), exist_ok=True)
+    clean_dist = district.replace(' ', '_')
+    output_filename = os.path.join(stats_dir, user, f"stats_bars_{clean_dist}_{user}.png")
+    
+    fig.savefig(output_filename, dpi=200)
+    plt.close()
 
 from shapely.geometry import Point
 
