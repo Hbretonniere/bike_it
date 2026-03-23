@@ -13,6 +13,7 @@ from datetime import datetime
 from PIL import Image
 import json
 from matplotlib.lines import Line2D
+import shutil
 
 def get_graph_stats(graph,district):
     stats_district = district+".json"
@@ -158,14 +159,17 @@ def highlight_edges(graph,list_edges,user,color,district,date):
     return edge_colors, edge_widths
 
 
-def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date):
+def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, date,last_day):
     os.makedirs("plots/"+user, exist_ok=True)
     os.makedirs("stats/"+user, exist_ok=True)
-    if user == "comparison":
+    if user == "Comparison":
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
+        latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
     else:
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.png"
-    if user == "comparison" or ( (user != "comparison") and (not os.path.isfile(plot_name) ) ):
+        latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
+
+    if user == "Comparison" or ( (user != "Comparison") and (not os.path.isfile(plot_name) ) ):
         print(f"Plotting {district} for {date}")  
         fig, ax = ox.plot.plot_graph(
             graph_dict,
@@ -176,7 +180,7 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             node_zorder=0,
             bgcolor="w"
         )
-        if user == "comparison":
+        if user == "Comparison":
             legend_elements = [
                 Line2D([0], [0], color='red', lw=2, label='Both'),
                 Line2D([0], [0], color='blue', lw=2, label='Hubert only'),
@@ -185,9 +189,13 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             ax.legend(handles=legend_elements, loc='lower right')
     
         ax.set_title(f"{district} - {user} ({date})")
-        #fig.savefig(plot_name, dpi=500, bbox_inches='tight')
         fig.savefig(plot_name, dpi=250, bbox_inches='tight')
-        plt.close(fig) 
+        plt.close(fig)
+    if (date == last_day):
+            try:
+                shutil.copy(plot_name,latest_plot)
+            except:
+                pass 
 
 def get_number_of_mapped_streets(list_edges):
     mapped_street_names = [edge_data[1] for edge_data in list_edges]
@@ -397,14 +405,135 @@ def create_gif(district, user):
 def merge_edges(edge_colors_pa,edge_colors_hubert):
     merged_colors = []
     for i in range(max(len(edge_colors_hubert),len(edge_colors_pa))):
-        if edge_colors_hubert[i] == "red":
-            if edge_colors_pa[i] == "red":
+        if edge_colors_hubert[i] == "red" or edge_colors_hubert[i] == "green":
+            if edge_colors_pa[i] == "red" or edge_colors_pa[i] == "green":
                 merged_colors.append("red") #mapped by both
             else:
                 merged_colors.append("blue") #mapped by Hubert only
         else:
-            if edge_colors_pa[i] == "red":
+            if edge_colors_pa[i] == "red" or edge_colors_pa[i] == "green":
                 merged_colors.append("green") #mapped by PA only
             else:
                 merged_colors.append("grey") #mapped by Hubert none
     return merged_colors
+
+def plot_district_user_bars(df, user, district):
+    """
+    Generates and saves a two-bar vertical chart where colors 'fill' 
+    a 100% background bar.
+    """
+    try:
+        # Handle district filtering
+        dist_data = filter_df_for_district(df, df['districts'].tolist(), district).iloc[0]
+    except (IndexError, KeyError):
+        return
+
+    percentage_street = dist_data['percentage street']
+    percentage_segments = dist_data['percentage segments']
+
+    labels = ['Streets', 'Segments']
+    values = [percentage_street, percentage_segments]
+    
+    # Determine fill colors
+    bar_colors = ['tab:blue', 'tab:red']
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(3, 7)) 
+    
+    # Clean up the axis
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    ax.set_ylim(-15, 110) # Room for labels below and title above
+
+    positions = np.arange(len(labels))
+    bar_width = 0.6
+
+    # 1. Draw the BACKGROUND bars (the 100% "container")
+    ax.bar(positions, [100, 100], width=bar_width, color='#eeeeee', 
+           edgecolor='#cccccc', linewidth=0.5)
+
+    # 2. Draw the FILL bars (the actual data)
+    bars = ax.bar(positions, values, width=bar_width, color=bar_colors)
+
+    # Add the Title
+ #   ax.set_title(f"{district.replace('_', ' ')}\n{user}", fontsize=14, fontweight='bold', pad=25)
+
+    # Add percentage labels below the bars
+    for bar, value in zip(bars, values):
+        ax.text(bar.get_x() + bar.get_width() / 2, 
+                -2, # Just below the baseline
+                f"{value:.0f}%", 
+                ha='center', va='top', fontsize=12, fontweight='bold')
+
+    # Add category labels (Streets/Segments)
+    ax.set_xticks(positions)
+    ax.set_xticklabels(labels, fontsize=10, fontweight='bold')
+    
+    # Optional: Add a "100%" markers or light grid line at the top
+    ax.axhline(100, color='white', linewidth=1, linestyle='--', alpha=0.5)
+
+    plt.tight_layout()
+
+    # Save the file
+    os.makedirs(os.path.join("stats", user), exist_ok=True)
+    clean_dist = district.replace(' ', '_')
+    output_filename = os.path.join("stats", user, f"stats_bars_{clean_dist}_{user}.png")
+    
+    fig.savefig(output_filename, dpi=200)
+    plt.close()
+
+from shapely.geometry import Point
+
+def export_snapped_gpx(graph, user, district):
+    # Retrieve original coordinates and timestamps
+    coords_gpx, _, dates_gpx = get_coords_dates_gpx(user)
+    lats = [c[0] for c in coords_gpx]
+    lons = [c[1] for c in coords_gpx]
+
+    # Snap all points to find the nearest edges
+    edge_ids = ox.nearest_edges(graph, X=lons, Y=lats)
+    gdf_edges = ox.graph_to_gdfs(graph, nodes=False)
+
+    # Prepare new GPX structure
+    new_gpx = gpxpy.gpx.GPX()
+    gpx_track = gpxpy.gpx.GPXTrack(name=f"{user}_{district}_snapped")
+    new_gpx.tracks.append(gpx_track)
+    gpx_segment = gpxpy.gpx.GPXTrackSegment()
+    gpx_track.segments.append(gpx_segment)
+
+    for i, (u, v, k) in enumerate(edge_ids):
+        # 1. Get the actual road geometry (LineString)
+        edge_data = gdf_edges.loc[(u, v, k)]
+        geometry = edge_data.get('geometry')
+
+        # 2. Identify original point
+        original_pt = Point(lons[i], lats[i])
+
+        if geometry is None:
+            # Fallback for straight edges without complex geometry
+            node_u = graph.nodes[u]
+            node_v = graph.nodes[v]
+            # Create a simple line between nodes to snap to
+            from shapely.geometry import LineString
+            geometry = LineString([(node_u['x'], node_u['y']), (node_v['x'], node_v['y'])])
+
+        # 3. Project original point onto the edge to find the closest snapped coordinate
+        # .project finds distance along line; .interpolate returns the point at that distance
+        snapped_pt = geometry.interpolate(geometry.project(original_pt))
+
+        # 4. Append to GPX (lon, lat)
+        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(
+            latitude=snapped_pt.y,
+            longitude=snapped_pt.x,
+            time=dates_gpx[i]
+        ))
+
+    # Save output
+    os.makedirs(f"cleaned_gpx/{user}", exist_ok=True)
+    output_path = f"cleaned_gpx/{user}/{district}_snapped.gpx"
+    with open(output_path, "w") as f:
+        f.write(new_gpx.to_xml())
+    
+    print(f"Point-snapped GPX saved: {output_path}")

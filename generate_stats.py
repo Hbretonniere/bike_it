@@ -24,8 +24,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
         "--users", 
         nargs='+', 
-        default=['hubert', 'pa'], 
-        help="User from which to generate the stats. Default is all (pa, hubert). Looks for data in segments/user."
+        default=['Hubert', 'PA'], 
+        help="User from which to generate the stats. Default is all (PA, Hubert). Looks for data in segments/user."
     )
 
 parser.add_argument(
@@ -105,7 +105,8 @@ for user in users:
                 edge_colors[user][district],
                 edge_widths[user][district],
                 color,
-                current_date
+                current_date,
+                last_day
             )
 
         
@@ -125,17 +126,25 @@ for user in users:
                     [district]
                 )
                 create_gif(district, user)
+        if user != "Comparison":
+            for district in list_districts:
+                plot_district_user_bars(
+                    final_table,
+                    user,
+                    district,
+                )
 
 for district in list_districts:
-    merged_colors = merge_edges(edge_colors["pa"][district], edge_colors["hubert"][district])
+    merged_colors = merge_edges(edge_colors["PA"][district], edge_colors["Hubert"][district])
     plot_mapped(
         graph_dict[district],
-        "comparison",
+        "Comparison",
         district,
         merged_colors,
         0.5,
         color,
-        current_date
+        current_date,
+        last_day
     )
 
 
@@ -196,12 +205,13 @@ for district in list_districts:
     fig, ax1 = plt.subplots(figsize=(12, 7))
     ax2 = ax1.twinx()
     
-    user_colors = {'pa': 'tab:blue', 'hubert': 'tab:green'}
+    user_colors = {'PA': 'tab:blue', 'Hubert': 'tab:green'}
     all_lines = []
 
     for user in users:
         data = full_df[(full_df['districts'] == district) & (full_df['user'] == user)].sort_values('date')
         if data.empty:
+            print("empty data",user)
             continue
         
         l_street = ax1.plot(data['date'], data['number of mapped streets'], color=user_colors[user], 
@@ -224,6 +234,10 @@ for district in list_districts:
     ax1.legend(all_lines, labs, loc='upper left', ncol=2, fontsize='small')
     
     plt.tight_layout()
-    os.makedirs(f"plots/comparison/timeseries/", exist_ok=True)
-    plt.savefig(f"plots/comparison/timeseries/{district}.png")
+    os.makedirs(f"plots/Comparison/timeseries/", exist_ok=True)
+    plt.savefig(f"plots/Comparison/timeseries/{district}.png")
     plt.close()
+
+# print("Starting GPX geometry export...")
+# for user in users:
+#         export_snapped_gpx(graph_dict["Barcelona"], user, "Barcelona")
