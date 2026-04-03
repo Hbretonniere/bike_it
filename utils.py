@@ -195,7 +195,7 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
             show=False,
             close=False,
             node_size=0,
-            bgcolor="gray"
+            bgcolor="white"
         )
 
 
@@ -434,7 +434,7 @@ def merge_edges(edge_colors_pa,edge_colors_hubert):
             if edge_colors_pa[i] == "red" or edge_colors_pa[i] == "green":
                 merged_colors.append("green") #mapped by PA only
             else:
-                merged_colors.append("white") #mapped by hite none
+                merged_colors.append("gray") #mapped by hite none
     return merged_colors
 
 def plot_district_user_bars(df, user, district):
