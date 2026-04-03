@@ -14,6 +14,8 @@ from PIL import Image
 import json
 from matplotlib.lines import Line2D
 import shutil
+import contextily as ctx
+
 
 def get_graph_stats(graph,district):
     stats_district = district+".json"
@@ -75,6 +77,7 @@ def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
     list_edges = []
     
     if start and os.path.isfile(file_list_edges):
+        print("starting from file",file_list_edges)
         with open(file_list_edges, "r") as f:
             for line in f:
                 if line.strip():
@@ -119,7 +122,7 @@ def get_list_edges(graph, coords_gpx, dates_gpx, district, user, start=None):
 
 def load_last_gps_point(district,user):
     try:
-        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txtt" #bug with reading previous
+        file_list_edges = "edges/"+user+"/last_gpx_point_"+district+"-"+user+".txt" #bug with reading previous
         with open(file_list_edges, "r") as f:
             return int(f.read())
     except:
@@ -165,21 +168,38 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
     if user == "Comparison":
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
         latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
+        latest_plot_with_bg = f"plots/{user}/{district.replace(' ', '_')}-bg-{user}.png"
+
     else:
         plot_name = f"plots/{user}/{district.replace(' ', '_')}-{user}.{date}.png"
         latest_plot = f"plots/{user}/{district.replace(' ', '_')}-{user}.png"
+        latest_plot_with_bg = f"plots/{user}/{district.replace(' ', '_')}-bg-{user}.png"
 
     if user == "Comparison" or ( (user != "Comparison") and (not os.path.isfile(plot_name) ) ):
-        print(f"Plotting {district} for {date}")  
+        print(f"Plotting {district} for {date}")
+        
+        # 1. Ensure the graph is projected to Web Mercator (EPSG:3857)
+        # This is the standard for background tiles
+        # G_proj = ox.project_graph(graph_dict, to_crs='EPSG:3857')
+        
+        # # 2. Get District Boundary and project it to match the graph
+        # # Added .iloc[0:1] to ensure we handle the geodataframe correctly
+        # boundary_gdf = ox.geocode_to_gdf(district + ", Barcelona, Spain")
+        # boundary = boundary_gdf.to_crs(G_proj.crs).iloc[0:1]
+        
+        # 3. Plot the graph
         fig, ax = ox.plot.plot_graph(
             graph_dict,
-            edge_color=edge_colors,#[user][district],
-            edge_linewidth=0.5, #edge_widths[user][district],
+            edge_color=edge_colors,
+            edge_linewidth=0.5,
             show=False,
-            close=True,
-            node_zorder=0,
-            bgcolor="w"
+            close=False,
+            node_size=0,
+            bgcolor="white"
         )
+
+
+
         if user == "Comparison":
             legend_elements = [
                 Line2D([0], [0], color='red', lw=2, label='Both'),
@@ -414,7 +434,7 @@ def merge_edges(edge_colors_pa,edge_colors_hubert):
             if edge_colors_pa[i] == "red" or edge_colors_pa[i] == "green":
                 merged_colors.append("green") #mapped by PA only
             else:
-                merged_colors.append("grey") #mapped by Hubert none
+                merged_colors.append("white") #mapped by hite none
     return merged_colors
 
 def plot_district_user_bars(df, user, district):
