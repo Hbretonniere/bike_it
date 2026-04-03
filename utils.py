@@ -191,11 +191,11 @@ def plot_mapped(graph_dict, user, district, edge_colors, edge_widths, color, dat
         fig, ax = ox.plot.plot_graph(
             graph_dict,
             edge_color=edge_colors,
-            edge_linewidth=0.5,
+            edge_linewidth=0.3,
             show=False,
             close=False,
             node_size=0,
-            bgcolor="white"
+            bgcolor="gray"
         )
 
 
